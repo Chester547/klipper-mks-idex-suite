@@ -1,0 +1,2 @@
+jsonschema>=4.17,<5
+Jinja2>=3.1,<4

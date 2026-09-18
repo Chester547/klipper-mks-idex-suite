@@ -1,0 +1,58 @@
+{% import "drivers/tmc2209.cfg.j2" as tmc %}
+# IDEX: cinematica base cartesiana + segundo carro X independiente
+# (dual_carriage). Los pines de dual_carriage/extruder1 NO vienen de la
+# plantilla de placa (son de tu modificacion fisica): se toman del perfil que
+# llenaste en el asistente. mks_suite_common.render_templates() valida que
+# existan ANTES de llegar aqui, asi que si ves este archivo generado es
+# porque esos campos ya estaban completos.
+#
+# Los macros T0/T1/MKS_CAM_GOTO_REF viven en un archivo estatico aparte
+# (macros/idex_calibration_macros.cfg) para no mezclar el Jinja2 de
+# instalacion (este archivo) con el Jinja2 en tiempo de ejecucion que usa
+# Klipper dentro de sus propios gcode_macro.
+
+[printer]
+kinematics: cartesian
+max_velocity: 300
+max_accel: 3000
+max_z_velocity: 5
+max_z_accel: 100
+square_corner_velocity: 5.0
+
+[save_variables]
+filename: {{ data_path }}/idex_variables.cfg
+
+{% set dc = profile.drivers.get('dual_carriage') %}
+[dual_carriage]
+axis: x
+step_pin: {{ dc.step_pin }}
+dir_pin: {{ dc.dir_pin }}
+enable_pin: {{ dc.enable_pin }}
+microsteps: 16
+rotation_distance: 40
+endstop_pin: {{ tmc.endstop_pin(profile, 'dual_carriage', dc.endstop_pin) }}
+position_endstop: {{ dc.position_endstop | default(235) }}
+position_min: 0
+position_max: {{ dc.position_max | default(235) }}
+homing_speed: 50
+safe_distance: {{ dc.safe_distance | default(40) }}
+{{ tmc.block(profile, 'dual_carriage') }}
+
+{% set t1 = profile.toolheads | selectattr('id', 'equalto', 'T1') | list | first %}
+{% set d1 = profile.drivers.get('extruder1') %}
+[extruder1]
+step_pin: {{ d1.step_pin }}
+dir_pin: {{ d1.dir_pin }}
+enable_pin: {{ d1.enable_pin }}
+microsteps: 16
+rotation_distance: 33.500
+nozzle_diameter: {{ t1.nozzle_diameter | default(0.4) }}
+filament_diameter: 1.75
+heater_pin: {{ t1.heater_pin }}
+sensor_type: {{ t1.thermistor_type | default('ATC Semitec 104GT-2') }}
+sensor_pin: {{ t1.sensor_pin }}
+control: pid
+min_temp: {{ t1.min_temp | default(0) }}
+max_temp: {{ t1.max_temp | default(300) }}
+max_extrude_only_distance: 100.0
+{{ tmc.block(profile, 'extruder1') }}

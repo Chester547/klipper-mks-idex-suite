@@ -1,0 +1,21 @@
+{% for led in profile.leds %}
+[neopixel {{ led.name }}]
+pin: {{ led.pin }}
+chain_count: {{ led.chain_count }}
+color_order: GRB
+initial_RED: 0.3
+initial_GREEN: 0.3
+initial_BLUE: 0.3
+
+{% if led.use_led_effect | default(false) %}
+# Requiere el plugin de terceros 'led_effect' (github.com/julianschill/klipper-led_effect)
+# instalado por separado -- si no esta instalado, comenta este bloque [led_effect].
+[led_effect {{ led.name }}_idle]
+autostart: true
+frame_rate: 24
+leds:
+    neopixel:{{ led.name }}
+layers:
+    static 0 0 top (1.0, 1.0, 1.0)
+{% endif %}
+{% endfor %}

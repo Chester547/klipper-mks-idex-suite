@@ -1,0 +1,7 @@
+[filament_switch_sensor mks_filament_sensor]
+switch_pin: {{ profile.filament_sensor.pin }}
+pause_on_runout: True
+runout_gcode:
+    PAUSE
+event_delay: 3.0
+pause_delay: 0.5

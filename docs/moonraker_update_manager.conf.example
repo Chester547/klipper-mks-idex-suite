@@ -1,0 +1,21 @@
+# Bloque para moonraker.conf -- integra mks-idex-suite con Moonraker Update
+# Manager para poder actualizar con un click desde Mainsail/Fluidd cuando
+# haya commits nuevos en GitHub.
+#
+# install.sh ya agrega este bloque automaticamente (con la ruta real de tu
+# checkout en 'path'). Se deja aqui tambien como referencia / para copiar a
+# mano si prefieres gestionar moonraker.conf tu mismo.
+#
+# Sintaxis vigente: la seccion es "[update_manager <nombre>]" (SIN la
+# palabra "client"; esa variante aparece en guias antiguas de otros plugins
+# pero ya no es la forma documentada por Moonraker).
+
+[update_manager mks_idex_suite]
+type: git_repo
+path: ~/klipper-mks-idex-suite
+origin: https://github.com/<tu-usuario>/klipper-mks-idex-suite.git
+primary_branch: main
+managed_services: moonraker
+is_system_service: False
+install_script: install.sh
+requirements: requirements.txt

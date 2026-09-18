@@ -1,0 +1,6 @@
+# MCU secundaria experimental: placa STM32 generica (ej. SKR/EBB) con
+# firmware Klipper propio, comunicando por USB o UART-USB.
+[mcu {{ mcu.name }}]
+serial: {{ mcu.serial }}
+baud: {{ mcu.baud | default(250000) }}
+restart_method: {{ mcu.restart_method | default('command') }}

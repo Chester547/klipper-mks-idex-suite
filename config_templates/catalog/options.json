@@ -1,0 +1,63 @@
+{
+  "boards": [
+    { "id": "mks_robin_nano_v1.2", "label": "MKS Robin Nano v1.2", "mcu_family": "STM32F103" },
+    { "id": "mks_robin_nano_v2", "label": "MKS Robin Nano V2", "mcu_family": "STM32F103" },
+    { "id": "mks_robin_nano_v3", "label": "MKS Robin Nano V3", "mcu_family": "STM32F407" },
+    { "id": "mks_monster8_v2", "label": "MKS Monster8 V2", "mcu_family": "STM32F407" },
+    { "id": "creality_4.2.2", "label": "Creality v4.2.2", "mcu_family": "STM32F103" },
+    { "id": "creality_4.2.7", "label": "Creality v4.2.7", "mcu_family": "STM32F103" }
+  ],
+  "kinematics": [
+    { "id": "cartesian", "label": "Cartesiana" },
+    { "id": "corexy", "label": "CoreXY" },
+    { "id": "idex", "label": "IDEX (doble carro independiente)" }
+  ],
+  "driver_models": [
+    { "id": "tmc2209", "label": "TMC2209", "interfaces": ["uart", "standalone"] },
+    { "id": "tmc2208", "label": "TMC2208", "interfaces": ["uart", "standalone"] },
+    { "id": "tmc2130", "label": "TMC2130", "interfaces": ["spi"] },
+    { "id": "none", "label": "Driver externo / no gestionado por Klipper", "interfaces": ["standalone"] }
+  ],
+  "hotends": [
+    { "id": "e3d_v6", "label": "E3D V6" },
+    { "id": "e3d_revo", "label": "E3D Revo" },
+    { "id": "microswiss_all_metal", "label": "Micro Swiss All-Metal" },
+    { "id": "dragon_sf", "label": "Phaetus Dragon SF" },
+    { "id": "dragon_hf", "label": "Phaetus Dragon HF" },
+    { "id": "mellow_nf_crazy", "label": "Mellow NF-Crazy" },
+    { "id": "generic", "label": "Generico / stock" }
+  ],
+  "extruders": [
+    { "id": "bmg_clone", "label": "BMG (clon)" },
+    { "id": "orbiter_v2", "label": "Orbiter V2" },
+    { "id": "lgx_lite", "label": "LGX Lite" },
+    { "id": "titan", "label": "Titan" },
+    { "id": "creality_sprite", "label": "Creality Sprite" },
+    { "id": "generic", "label": "Generico / stock" }
+  ],
+  "probes": [
+    { "id": "none", "label": "Sin sonda (endstop fisico en Z)" },
+    { "id": "bltouch", "label": "BLTouch / CR Touch / clones" },
+    { "id": "inductive", "label": "Inductivo (ej. SuperPINDA)" },
+    { "id": "superpinda", "label": "SuperPINDA" }
+  ],
+  "secondary_mcu_types": [
+    { "id": "arduino_mega2560", "label": "Arduino Mega2560" },
+    { "id": "stm32_generic", "label": "STM32 generica (SKR/EBB...)" },
+    { "id": "esp32", "label": "ESP32" }
+  ],
+  "performance_modes": [
+    { "id": "quiet", "label": "Silencioso", "description": "StealthChop forzado, aceleraciones bajas." },
+    { "id": "balanced", "label": "Balanceado", "description": "Cambio automatico por velocidad, ajuste estandar." },
+    { "id": "sport", "label": "Deportivo", "description": "SpreadCycle forzado, aceleraciones al maximo configurado." }
+  ],
+  "suggested_peripheral_pins": {
+    "_comment": "Sugerencias de comunidad para precargar el formulario -- SIEMPRE editables, no se usan directo en las plantillas .cfg.j2.",
+    "mks_robin_nano_v1.2": { "probe_pin": "PA1", "probe_servo_pin": "PA2", "filament_sensor_pin": "PA4" },
+    "mks_robin_nano_v2": { "probe_pin": "PA1", "probe_servo_pin": "PA2", "filament_sensor_pin": "PA4" },
+    "mks_robin_nano_v3": { "probe_pin": "PA1", "probe_servo_pin": "PA2", "filament_sensor_pin": "PA4" },
+    "mks_monster8_v2": { "probe_pin": "PC4", "probe_servo_pin": "PC5", "filament_sensor_pin": "PC6" },
+    "creality_4.2.2": { "probe_pin": "PB0", "probe_servo_pin": "PB1", "filament_sensor_pin": "PA4" },
+    "creality_4.2.7": { "probe_pin": "PB0", "probe_servo_pin": "PB1", "filament_sensor_pin": "PA4" }
+  }
+}

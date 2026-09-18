@@ -1,0 +1,104 @@
+.cam-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+.cam-viewport-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.cam-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  overflow: hidden;
+}
+
+.cam-viewport img#camStream {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+  transition: transform 0.15s ease-out;
+}
+
+.cam-reticle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cam-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+  background: #05080a;
+}
+
+.cam-overlay-top, .cam-overlay-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-panel);
+}
+
+.mks-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mks-seg button {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+}
+.mks-seg button:last-child { border-right: none; }
+.mks-seg button.active { background: var(--accent); color: #05170a; }
+.mks-seg button:hover:not(.active) { background: var(--bg-card); color: var(--text); }
+
+.cam-side-panel { display: flex; flex-direction: column; gap: 0; }
+
+/* ---- jog pad ------------------------------------------------------- */
+
+.jogpad {
+  width: 180px;
+  height: 180px;
+  margin: 14px auto;
+  position: relative;
+}
+.jogpad svg { width: 100%; height: 100%; }
+.jogpad .jog-btn {
+  cursor: pointer;
+}
+.jogpad .jog-btn rect, .jogpad .jog-btn circle, .jogpad .jog-btn path {
+  fill: #20281f;
+  stroke: var(--border);
+}
+.jogpad .jog-btn:hover rect, .jogpad .jog-btn:hover path { fill: var(--accent-dim); }
+.jogpad .jog-btn.home circle { fill: var(--accent); }
+.jogpad .jog-btn.home:hover circle { fill: var(--accent); filter: brightness(1.15); }
+.jogpad .jog-label { fill: var(--text-dim); font-size: 12px; font-family: var(--font); pointer-events: none; }
+.jogpad .jog-btn.home .jog-label { fill: #05170a; }

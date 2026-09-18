@@ -1,0 +1,19 @@
+# BLTouch / clones (3D Touch, CR Touch). El wizard llena profile.probe.* con
+# los pines del conector "PROBE" de tu placa -- confirma control_pin/sensor_pin
+# contra tu board si usaste un adaptador o zocalo distinto al de fabrica.
+[bltouch]
+sensor_pin: ^{{ profile.probe.pin }}
+control_pin: {{ profile.probe.servo_pin }}
+x_offset: {{ profile.probe.x_offset | default(0) }}
+y_offset: {{ profile.probe.y_offset | default(0) }}
+z_offset: {{ profile.probe.z_offset | default(0) }}
+speed: 5
+samples: 2
+sample_retract_dist: 3.0
+stow_on_each_sample: True
+
+[safe_z_home]
+# home_xy_position asume una cama ~235x235; ajustalo al centro real de tu cama.
+home_xy_position: 117, 117
+speed: 100
+z_hop: 10

@@ -1,0 +1,28 @@
+{
+  "camera_id": "example-usb-calib-cam",
+  "name": "Ejemplo: camara USB de calibracion (base magnetica)",
+  "suite_schema_version": 1,
+  "source": {
+    "type": "usb_v4l2",
+    "device": "/dev/v4l/by-id/usb-EDIT_ME_calibration_cam-video-index0",
+    "resolution": { "width": 1280, "height": 720 },
+    "fps": 25,
+    "rotation": 0
+  },
+  "stream": {
+    "mjpeg_url": "http://localhost:8080/webcam/stream",
+    "snapshot_url": "http://localhost:8080/webcam/snapshot",
+    "crowsnest_section": "cam 1"
+  },
+  "mount": {
+    "reference_x": 110,
+    "reference_y": 110,
+    "reference_z_clearance": 5,
+    "focus_height": 12.5
+  },
+  "overlay": {
+    "reticle_color": "#39ff6a",
+    "reticle_diameter_px": 220,
+    "zoom_levels": [1, 2, 4]
+  }
+}

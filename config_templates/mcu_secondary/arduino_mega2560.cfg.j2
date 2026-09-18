@@ -1,0 +1,7 @@
+# MCU secundaria experimental: Arduino Mega2560 (firmware Klipper compilado
+# para atmega2560). Uso tipico: ejes o extrusores adicionales fuera del MCU
+# principal.
+[mcu {{ mcu.name }}]
+serial: {{ mcu.serial }}
+baud: {{ mcu.baud | default(250000) }}
+restart_method: {{ mcu.restart_method | default('arduino') }}

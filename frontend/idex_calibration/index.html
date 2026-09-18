@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calibracion IDEX por camara</title>
+<link rel="stylesheet" href="../shared/theme.css" />
+<link rel="stylesheet" href="calibration.css" />
+</head>
+<body>
+<div class="mks-shell">
+  <aside class="mks-sidebar">
+    <div class="mks-brand"><span class="dot"></span> mks-idex-suite</div>
+    <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Perfil de hardware</h3>
+      <select id="hwProfileSelect" style="width:100%;"></select>
+    </div>
+    <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Camara</h3>
+      <select id="camProfileSelect" style="width:100%;"></select>
+    </div>
+    <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Perfil de rendimiento</h3>
+      <div class="mks-seg" id="perfSeg">
+        <button data-mode="quiet">Silencioso</button>
+        <button data-mode="balanced">Balanceado</button>
+        <button data-mode="sport">Deportivo</button>
+      </div>
+    </div>
+    <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Calibracion guardada</h3>
+      <div class="hint" id="calibSummary">sin datos</div>
+    </div>
+  </aside>
+
+  <main class="mks-main" style="max-width:none;">
+    <div class="mks-topbar">
+      <div>
+        <h1 class="mks-title">Calibracion IDEX por camara</h1>
+        <div class="mks-subtitle" id="sessionStatus">sin sesion activa</div>
+      </div>
+      <button class="mks-btn" id="startBtn">Iniciar calibracion (G28 + T0)</button>
+    </div>
+
+    <div class="cam-layout">
+      <div class="cam-viewport-wrap">
+        <div class="cam-overlay-top">
+          <div class="mks-seg" id="toolSeg">
+            <button data-tool="T0" class="active">T0</button>
+            <button data-tool="T1">T1</button>
+          </div>
+          <div class="mks-seg" id="zoomSeg">
+            <button data-zoom="1">1X</button>
+            <button data-zoom="2">2X</button>
+            <button data-zoom="4">4X</button>
+          </div>
+        </div>
+
+        <div class="cam-viewport" id="camViewport">
+          <img id="camStream" alt="stream de camara" />
+          <svg id="camOverlay" class="cam-reticle" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"></svg>
+          <div class="cam-placeholder" id="camPlaceholder">Selecciona un perfil de camara para ver el stream</div>
+        </div>
+
+        <div class="cam-overlay-bottom">
+          <div id="posReadout" class="mks-badge">X: -- Y: --</div>
+          <button class="mks-btn secondary" id="captureBtn">Capturar offset (centrar en referencia)</button>
+        </div>
+      </div>
+
+      <div class="cam-side-panel">
+        <div class="mks-card">
+          <h3>Ajuste fino</h3>
+          <div class="mks-seg" id="stepSeg">
+            <button data-step="0.05">0.05</button>
+            <button data-step="0.1" class="active">0.1</button>
+            <button data-step="0.5">0.5</button>
+            <button data-step="1">1</button>
+            <span style="align-self:center;color:var(--text-dim);font-size:11px;">mm</span>
+          </div>
+          <div id="jogPadHolder"></div>
+          <button class="mks-btn secondary" id="homeRefBtn" style="width:100%;margin-top:10px;">Volver a referencia</button>
+        </div>
+        <div class="mks-card">
+          <h3>Actividad</h3>
+          <div class="mks-log" id="activityLog"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../shared/api.js"></script>
+<script src="overlay.js"></script>
+<script src="jogpad.js"></script>
+<script src="calibration.js"></script>
+</body>
+</html>

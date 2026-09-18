@@ -1,0 +1,89 @@
+{% include "_safety_banner.j2" %}
+{% import "drivers/tmc2209.cfg.j2" as tmc %}
+# Confianza de pinout: ALTA para motores/heaters/fan (verificado contra
+# klipper/config/generic-mks-robin-nano-v2.cfg). Confianza MEDIA para los
+# uart_pin de TMC2209 (ese archivo mainline no asume driver; uart_pin viene de
+# documentacion de comunidad) -- confirma con tu placa antes de habilitar UART.
+# MCU: STM32F103, bootloader 128KiB. Flasheo: scripts/update_mks_robin.py + SD.
+
+[mcu]
+serial: {{ profile.board.mcu }}
+baud: {{ profile.board.baud | default(250000) }}
+restart_method: command
+
+[stepper_x]
+step_pin: PE3
+dir_pin: !PE2
+enable_pin: !PE4
+microsteps: 16
+rotation_distance: 40
+endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_x', 'PA15') }}
+position_endstop: 0
+position_max: 235
+homing_speed: 50
+{{ tmc.block(profile, 'stepper_x') }}
+{% if profile.drivers.get('stepper_x', {}).interface == 'uart' %}
+# uart_pin sugerido por documentacion de comunidad: PD5 (verificar)
+{% endif %}
+
+[stepper_y]
+step_pin: PE0
+dir_pin: !PB9
+enable_pin: !PE1
+microsteps: 16
+rotation_distance: 40
+endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_y', '!PA12') }}
+position_endstop: 0
+position_max: 235
+homing_speed: 50
+{{ tmc.block(profile, 'stepper_y') }}
+
+[stepper_z]
+step_pin: PB5
+dir_pin: PB4
+enable_pin: !PB8
+microsteps: 16
+rotation_distance: 8
+{% if profile.probe.type is defined and profile.probe.type != 'none' %}
+endstop_pin: probe:z_virtual_endstop
+{% else %}
+endstop_pin: !PA11
+position_endstop: 0.0
+{% endif %}
+position_max: 250
+position_min: -5
+{{ tmc.block(profile, 'stepper_z') }}
+
+[extruder]
+step_pin: PD6
+dir_pin: !PD3
+enable_pin: !PB3
+microsteps: 16
+rotation_distance: 33.500
+nozzle_diameter: {{ profile.toolheads[0].nozzle_diameter | default(0.4) }}
+filament_diameter: 1.75
+heater_pin: PC3
+sensor_type: {{ profile.toolheads[0].thermistor_type | default('ATC Semitec 104GT-2') }}
+sensor_pin: PC1
+control: pid
+pid_Kp: 21.527
+pid_Ki: 1.063
+pid_Kd: 108.982
+min_temp: {{ profile.toolheads[0].min_temp | default(0) }}
+max_temp: {{ profile.toolheads[0].max_temp | default(300) }}
+max_extrude_only_distance: 100.0
+{{ tmc.block(profile, 'extruder') }}
+
+[heater_bed]
+heater_pin: PA0
+sensor_type: EPCOS 100K B57560G104F
+sensor_pin: PC0
+control: pid
+pid_Kp: 54.027
+pid_Ki: 0.770
+pid_Kd: 948.182
+min_temp: 0
+max_temp: 130
+
+[fan]
+pin: PB1

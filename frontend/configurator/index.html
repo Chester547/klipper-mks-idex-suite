@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MKS/Creality Configurator</title>
+<link rel="stylesheet" href="../shared/theme.css" />
+<link rel="stylesheet" href="wizard.css" />
+</head>
+<body>
+<div class="mks-shell">
+  <aside class="mks-sidebar">
+    <div class="mks-brand"><span class="dot"></span> mks-idex-suite</div>
+    <ul class="mks-steps" id="stepList"></ul>
+    <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Perfiles guardados</h3>
+      <select id="profileSelect" style="width:100%;margin-bottom:8px;"></select>
+      <button class="mks-btn secondary" id="newProfileBtn" style="width:100%;">+ Nuevo perfil</button>
+    </div>
+    <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Plantillas base (GitHub)</h3>
+      <div class="hint" id="templateStatus">cargando...</div>
+      <button class="mks-btn secondary" id="syncBtn" style="width:100%;margin-top:8px;">Sincronizar</button>
+    </div>
+  </aside>
+
+  <main class="mks-main">
+    <div class="mks-topbar">
+      <div>
+        <h1 class="mks-title" id="pageTitle">Configurador MKS/Creality</h1>
+        <div class="mks-subtitle" id="pageSubtitle">Paso 1 de 7</div>
+      </div>
+      <span class="mks-badge" id="statusBadge">Sin guardar</span>
+    </div>
+
+    <div id="stepContent"></div>
+
+    <div class="mks-footer-actions">
+      <button class="mks-btn secondary" id="prevBtn">Atras</button>
+      <div style="display:flex; gap:10px;">
+        <button class="mks-btn secondary" id="saveBtn">Guardar perfil</button>
+        <button class="mks-btn" id="nextBtn">Siguiente</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../shared/api.js"></script>
+<script src="wizard.js"></script>
+</body>
+</html>

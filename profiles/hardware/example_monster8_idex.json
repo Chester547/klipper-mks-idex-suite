@@ -1,0 +1,114 @@
+{
+  "profile_id": "example-monster8-idex",
+  "name": "Ejemplo: Monster8 V2 IDEX CoreXY",
+  "suite_schema_version": 1,
+  "board": {
+    "id": "mks_monster8_v2",
+    "mcu": "/dev/serial/by-id/usb-Klipper_stm32f407xx_EDIT_ME-if00",
+    "baud": 250000,
+    "verified_pinout": false
+  },
+  "kinematics": "idex",
+  "secondary_mcus": [],
+  "drivers": {
+    "stepper_x": {
+      "model": "tmc2209",
+      "interface": "uart",
+      "uart_pin": "PD5",
+      "run_current": 0.8,
+      "hold_current_ratio": 0.5,
+      "sensorless_homing": true,
+      "diag_pin": "^PA14",
+      "driver_sgthrs": 80
+    },
+    "stepper_y": {
+      "model": "tmc2209",
+      "interface": "uart",
+      "uart_pin": "PD7",
+      "run_current": 0.8,
+      "hold_current_ratio": 0.5,
+      "sensorless_homing": true,
+      "diag_pin": "^PA15",
+      "driver_sgthrs": 80
+    },
+    "stepper_z": {
+      "model": "tmc2209",
+      "interface": "uart",
+      "uart_pin": "PD4",
+      "run_current": 0.6,
+      "hold_current_ratio": 0.5
+    },
+    "extruder": {
+      "model": "tmc2209",
+      "interface": "uart",
+      "uart_pin": "PD9",
+      "run_current": 0.65,
+      "hold_current_ratio": 0.5
+    },
+    "dual_carriage": {
+      "model": "tmc2209",
+      "interface": "uart",
+      "uart_pin": "PLACEHOLDER_VERIFY_UART_E1",
+      "run_current": 0.8,
+      "hold_current_ratio": 0.5,
+      "step_pin": "PLACEHOLDER_VERIFY_STEP_E1",
+      "dir_pin": "PLACEHOLDER_VERIFY_DIR_E1",
+      "enable_pin": "PLACEHOLDER_VERIFY_ENABLE_E1",
+      "endstop_pin": "PLACEHOLDER_VERIFY_ENDSTOP_E1",
+      "position_endstop": 235,
+      "position_max": 235,
+      "safe_distance": 40
+    },
+    "extruder1": {
+      "model": "tmc2209",
+      "interface": "uart",
+      "uart_pin": "PLACEHOLDER_VERIFY_UART_E2",
+      "run_current": 0.65,
+      "hold_current_ratio": 0.5,
+      "step_pin": "PLACEHOLDER_VERIFY_STEP_E2",
+      "dir_pin": "PLACEHOLDER_VERIFY_DIR_E2",
+      "enable_pin": "PLACEHOLDER_VERIFY_ENABLE_E2"
+    }
+  },
+  "toolheads": [
+    {
+      "id": "T0",
+      "hotend": "dragon_hf",
+      "extruder": "orbiter_v2",
+      "nozzle_diameter": 0.4,
+      "thermistor_type": "ATC Semitec 104GT-2",
+      "max_temp": 300,
+      "min_temp": 0
+    },
+    {
+      "id": "T1",
+      "hotend": "dragon_hf",
+      "extruder": "orbiter_v2",
+      "nozzle_diameter": 0.4,
+      "thermistor_type": "ATC Semitec 104GT-2",
+      "max_temp": 300,
+      "min_temp": 0,
+      "heater_pin": "PLACEHOLDER_VERIFY_HEATER_E2",
+      "sensor_pin": "PLACEHOLDER_VERIFY_SENSOR_E2",
+      "gcode_offset": { "x": 0, "y": 0, "z": 0 }
+    }
+  ],
+  "probe": {
+    "type": "bltouch",
+    "pin": "PC4",
+    "servo_pin": "PC5",
+    "x_offset": -42.0,
+    "y_offset": -8.0,
+    "z_offset": 2.1
+  },
+  "filament_sensor": {
+    "enabled": true,
+    "type": "switch",
+    "pin": "PC6",
+    "per_toolhead": false
+  },
+  "leds": [
+    { "name": "case_leds", "type": "ws2812", "pin": "PC7", "chain_count": 20, "use_led_effect": false }
+  ],
+  "performance_profile_defaults": { "active": "balanced" }
+}

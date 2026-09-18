@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mks-idex-suite/schema/calibration_data.schema.json",
+  "title": "CalibrationData",
+  "description": "Resultado persistido de una sesion de calibracion de offsets IDEX (Modulo 2). Un archivo por perfil de hardware, con historial.",
+  "type": "object",
+  "required": ["hardware_profile_id", "camera_id", "current"],
+  "properties": {
+    "hardware_profile_id": { "type": "string" },
+    "camera_id": { "type": "string" },
+    "suite_schema_version": { "type": "integer", "const": 1 },
+
+    "current": {
+      "type": "object",
+      "description": "Offset activo de T1 respecto a T0, ya aplicado via SET_GCODE_OFFSET y persistido en printer.cfg.",
+      "required": ["x", "y", "z", "method", "timestamp"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" },
+        "method": { "type": "string", "enum": ["manual_jog", "auto_vision"] },
+        "reference_position": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Solo relevante en method=auto_vision (score de deteccion de circulo)."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "history": {
+      "type": "array",
+      "description": "Snapshots anteriores, mas reciente al final. Permite revertir un mal calibrado.",
+      "items": {
+        "type": "object",
+        "required": ["x", "y", "z", "timestamp"],
+        "properties": {
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "z": { "type": "number" },
+          "method": { "type": "string", "enum": ["manual_jog", "auto_vision"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "note": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+
+    "step_sizes_mm": {
+      "type": "array",
+      "items": { "type": "number" },
+      "default": [0.05, 0.1, 0.5, 1.0]
+    }
+  },
+  "additionalProperties": false
+}

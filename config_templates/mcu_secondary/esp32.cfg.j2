@@ -1,0 +1,7 @@
+# MCU secundaria experimental: ESP32 con firmware Klipper compilado para
+# el target ESP32 (make menuconfig -> Micro-controller Architecture -> ESP32).
+# Suele conectarse como serie sobre USB (CP2102/CH340) igual que cualquier MCU.
+[mcu {{ mcu.name }}]
+serial: {{ mcu.serial }}
+baud: {{ mcu.baud | default(250000) }}
+restart_method: {{ mcu.restart_method | default('command') }}

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mks-idex-suite/schema/camera_profile.schema.json",
+  "title": "CameraProfile",
+  "description": "Describe la camara fisica usada por el Modulo 2 (Calibracion IDEX) y como localizar su stream de video servido por Crowsnest/MJPEG-Streamer.",
+  "type": "object",
+  "required": ["camera_id", "name", "source", "stream"],
+  "properties": {
+    "camera_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$" },
+    "name": { "type": "string" },
+    "suite_schema_version": { "type": "integer", "const": 1 },
+
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["usb_v4l2", "csi_libcamera"] },
+        "device": {
+          "type": "string",
+          "description": "Para usb_v4l2: /dev/v4l/by-id/... ; para csi_libcamera: normalmente '0' o el nombre del sensor."
+        },
+        "resolution": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "integer", "default": 1280 },
+            "height": { "type": "integer", "default": 720 }
+          }
+        },
+        "fps": { "type": "integer", "default": 25 },
+        "rotation": { "type": "integer", "enum": [0, 90, 180, 270], "default": 0 }
+      },
+      "additionalProperties": false
+    },
+
+    "stream": {
+      "type": "object",
+      "description": "Como el frontend llega al MJPEG stream expuesto por Crowsnest.",
+      "required": ["mjpeg_url"],
+      "properties": {
+        "mjpeg_url": { "type": "string", "description": "Ej. http://<host>:8080/webcam/stream" },
+        "snapshot_url": { "type": "string", "description": "Ej. http://<host>:8080/webcam/snapshot" },
+        "crowsnest_section": { "type": "string", "default": "cam 1" }
+      },
+      "additionalProperties": false
+    },
+
+    "mount": {
+      "type": "object",
+      "description": "Posicion logica fija de la camara respecto a la cama, usada para mover T0/T1 a la misma coordenada de comparacion.",
+      "properties": {
+        "reference_x": { "type": "number", "default": 110 },
+        "reference_y": { "type": "number", "default": 110 },
+        "reference_z_clearance": { "type": "number", "default": 5, "description": "Altura minima de seguridad sobre la cama antes de desplazamientos XY." },
+        "focus_height": { "type": "number", "description": "Z absoluto reportado como enfoque optimo, si aplica." }
+      },
+      "additionalProperties": false
+    },
+
+    "overlay": {
+      "type": "object",
+      "properties": {
+        "reticle_color": { "type": "string", "default": "#39ff6a" },
+        "reticle_diameter_px": { "type": "integer", "default": 220 },
+        "zoom_levels": {
+          "type": "array",
+          "items": { "type": "number" },
+          "default": [1, 2, 4]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

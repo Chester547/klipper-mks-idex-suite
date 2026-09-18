@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mks-idex-suite/schema/hardware_profile.schema.json",
+  "title": "HardwareProfile",
+  "description": "Perfil de hardware generado por el asistente del Modulo 1 (Configurador MKS/Creality). Se usa para renderizar las plantillas Jinja2 en config_templates/ y producir el printer.cfg final.",
+  "type": "object",
+  "required": ["profile_id", "name", "board", "kinematics", "toolheads"],
+  "properties": {
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$",
+      "description": "Identificador unico y estable del perfil (slug)."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "created": { "type": "string", "format": "date-time" },
+    "updated": { "type": "string", "format": "date-time" },
+    "suite_schema_version": { "type": "integer", "const": 1 },
+
+    "board": {
+      "type": "object",
+      "required": ["id", "mcu"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": [
+            "mks_robin_nano_v1.2",
+            "mks_robin_nano_v2",
+            "mks_robin_nano_v3",
+            "mks_monster8_v2",
+            "creality_4.2.2",
+            "creality_4.2.7"
+          ]
+        },
+        "mcu": {
+          "type": "string",
+          "description": "Ruta serie/USB del MCU principal, ej. /dev/serial/by-id/usb-Klipper_...",
+          "minLength": 1
+        },
+        "baud": { "type": "integer", "default": 250000 },
+        "verified_pinout": {
+          "type": "boolean",
+          "default": false,
+          "description": "El usuario confirmo manualmente el pinout contra su revision fisica de placa. La suite NO debe asumir true por defecto."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "kinematics": {
+      "type": "string",
+      "enum": ["cartesian", "corexy", "corexz", "idex"]
+    },
+
+    "secondary_mcus": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "serial"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["arduino_mega2560", "stm32_generic", "esp32"] },
+          "serial": { "type": "string" },
+          "baud": { "type": "integer", "default": 250000 },
+          "restart_method": { "type": "string", "enum": ["arduino", "command", "rpi_usb"], "default": "arduino" }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+
+    "drivers": {
+      "type": "object",
+      "description": "Un bloque por eje/stepper logico (stepper_x, stepper_y, stepper_z, extruder, dual_carriage, ...).",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["model", "interface"],
+        "properties": {
+          "model": { "type": "string", "enum": ["tmc2209", "tmc2208", "tmc2130", "none"] },
+          "interface": { "type": "string", "enum": ["uart", "spi", "standalone"] },
+          "step_pin": { "type": "string", "description": "Solo para entradas sin pin fijo de placa, ej. dual_carriage o extruder1." },
+          "dir_pin": { "type": "string" },
+          "enable_pin": { "type": "string" },
+          "endstop_pin": { "type": "string" },
+          "position_endstop": { "type": "number" },
+          "position_max": { "type": "number" },
+          "safe_distance": { "type": "number", "default": 40 },
+          "uart_pin": { "type": "string" },
+          "uart_address": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "cs_pin": { "type": "string" },
+          "run_current": { "type": "number", "minimum": 0, "maximum": 3.0 },
+          "hold_current_ratio": { "type": "number", "minimum": 0.1, "maximum": 1.0, "default": 0.5 },
+          "sense_resistor": { "type": "number", "default": 0.11 },
+          "interpolate": { "type": "boolean", "default": true },
+          "stealthchop_threshold": { "type": "integer", "default": 999999 },
+          "sensorless_homing": { "type": "boolean", "default": false },
+          "diag_pin": { "type": "string", "description": "Requerido si sensorless_homing es true (pin DIAG del driver)." },
+          "driver_sgthrs": { "type": "integer", "minimum": 0, "maximum": 255, "default": 75 }
+        },
+        "additionalProperties": false
+      },
+      "default": {}
+    },
+
+    "toolheads": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "hotend", "extruder", "nozzle_diameter"],
+        "properties": {
+          "id": { "type": "string", "enum": ["T0", "T1"] },
+          "hotend": {
+            "type": "string",
+            "enum": ["e3d_v6", "e3d_revo", "microswiss_all_metal", "dragon_sf", "dragon_hf", "mellow_nf_crazy", "generic"]
+          },
+          "extruder": {
+            "type": "string",
+            "enum": ["bmg_clone", "orbiter_v2", "lgx_lite", "titan", "creality_sprite", "generic"]
+          },
+          "nozzle_diameter": { "type": "number", "default": 0.4 },
+          "thermistor_type": { "type": "string", "default": "ATC Semitec 104GT-2" },
+          "max_temp": { "type": "integer", "default": 300 },
+          "min_temp": { "type": "integer", "default": 0 },
+          "heater_pin": { "type": "string", "description": "Solo T1 en IDEX (T0 usa el pin fijo de la placa)." },
+          "sensor_pin": { "type": "string", "description": "Solo T1 en IDEX (T0 usa el pin fijo de la placa)." },
+          "gcode_offset": {
+            "type": "object",
+            "description": "Offset relativo a T0. Solo aplica a T1 en IDEX; T0 es siempre (0,0,0).",
+            "properties": {
+              "x": { "type": "number", "default": 0 },
+              "y": { "type": "number", "default": 0 },
+              "z": { "type": "number", "default": 0 }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "probe": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["none", "bltouch", "inductive", "superpinda"] },
+        "pin": { "type": "string" },
+        "servo_pin": { "type": "string" },
+        "x_offset": { "type": "number", "default": 0 },
+        "y_offset": { "type": "number", "default": 0 },
+        "z_offset": { "type": "number", "default": 0 }
+      },
+      "additionalProperties": false
+    },
+
+    "filament_sensor": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "type": { "type": "string", "enum": ["switch", "motion_smart_filament_sensor"] },
+        "pin": { "type": "string" },
+        "per_toolhead": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+
+    "leds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "pin", "chain_count"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["ws2812", "neopixel"], "default": "ws2812" },
+          "pin": { "type": "string" },
+          "chain_count": { "type": "integer", "minimum": 1 },
+          "use_led_effect": {
+            "type": "boolean",
+            "default": false,
+            "description": "Requiere el plugin de terceros led_effect (julianschill) instalado aparte; si es false solo se genera [neopixel]."
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+
+    "endstops": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "pin": { "type": "string" },
+          "sensorless": { "type": "boolean", "default": false },
+          "position_endstop": { "type": "number" }
+        }
+      }
+    },
+
+    "performance_profile_defaults": {
+      "type": "object",
+      "properties": {
+        "active": { "type": "string", "enum": ["quiet", "balanced", "sport"], "default": "balanced" }
+      }
+    },
+
+    "git_sync": {
+      "type": "object",
+      "description": "Origen de las plantillas base usadas para generar este perfil, para poder reconciliar actualizaciones.",
+      "properties": {
+        "template_repo": { "type": "string", "format": "uri" },
+        "template_ref": { "type": "string", "default": "main" },
+        "template_commit": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false
+}
