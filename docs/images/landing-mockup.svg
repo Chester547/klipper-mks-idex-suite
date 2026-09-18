@@ -1,0 +1,33 @@
+<svg viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <rect x="0" y="0" width="1000" height="560" fill="#0e1210"/>
+
+  <circle cx="461" cy="70" r="5.5" fill="#39ff6a"/>
+  <text x="478" y="78" fill="#39ff6a" font-size="22" font-weight="800" text-anchor="start">mks-idex-suite</text>
+
+  <g font-size="12" font-weight="700">
+    <rect x="374" y="104" width="120" height="26" rx="13" fill="#123a1e" stroke="#1f8a44"/>
+    <text x="434" y="121" fill="#39ff6a" text-anchor="middle">Klipper: listo</text>
+    <rect x="504" y="104" width="130" height="26" rx="13" fill="#123a1e" stroke="#1f8a44"/>
+    <text x="569" y="121" fill="#39ff6a" text-anchor="middle">Moonraker: OK</text>
+  </g>
+
+  <!-- card 1 -->
+  <rect x="150" y="180" width="330" height="240" rx="16" fill="#1c2420" stroke="#2a352f"/>
+  <rect x="182" y="212" width="60" height="60" rx="14" fill="#39ff6a" fill-opacity="0.12" stroke="#1f8a44"/>
+  <text x="212" y="253" text-anchor="middle" font-size="28" fill="#39ff6a">&#9889;</text>
+  <text x="182" y="308" fill="#e7efe9" font-size="19" font-weight="700">Wizard</text>
+  <text x="182" y="332" fill="#8ea395" font-size="12.5">Asistente paso a paso: placa, cinematica,</text>
+  <text x="182" y="350" fill="#8ea395" font-size="12.5">drivers TMC, hotends y perifericos.</text>
+  <text x="182" y="390" fill="#39ff6a" font-size="13" font-weight="700">Iniciar wizard &#8594;</text>
+
+  <!-- card 2 -->
+  <rect x="520" y="180" width="330" height="240" rx="16" fill="#1c2420" stroke="#2a352f"/>
+  <rect x="552" y="212" width="60" height="60" rx="14" fill="#39ff6a" fill-opacity="0.12" stroke="#1f8a44"/>
+  <text x="582" y="253" text-anchor="middle" font-size="26" fill="#39ff6a">&#128247;</text>
+  <text x="552" y="308" fill="#e7efe9" font-size="17" font-weight="700">IDEX &#183; Calibracion por camara</text>
+  <text x="552" y="332" fill="#8ea395" font-size="12.5">Reticula, zoom y pad direccional para</text>
+  <text x="552" y="350" fill="#8ea395" font-size="12.5">alinear T0/T1 y ajustar el offset.</text>
+  <text x="552" y="390" fill="#39ff6a" font-size="13" font-weight="700">Abrir calibracion &#8594;</text>
+
+  <text x="500" y="500" text-anchor="middle" fill="#5c6b62" font-size="12">mks-idex-suite &#183; GitHub</text>
+</svg>

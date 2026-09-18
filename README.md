@@ -33,9 +33,17 @@ cd klipper-mks-idex-suite
 
 Detalle completo, variables de entorno para instalaciones no estandar, y el **checklist de seguridad que deberias leer antes de aplicar un perfil de hardware**, en [`docs/INSTALL.md`](docs/INSTALL.md).
 
-UI resultante:
-- Configurador: `http://<ip>:7125/mks-suite/ui/configurator/index.html`
-- Calibracion IDEX: `http://<ip>:7125/mks-suite/ui/idex_calibration/index.html`
+`install.sh` agrega un vhost de nginx dedicado (puerto `7140` por defecto) que sirve el frontend y hace proxy transparente de la API de Moonraker. Con eso arriba, una sola pagina de inicio estilo RatOS te lleva a los dos modulos:
+
+```
+http://<ip-de-tu-pi>:7140/
+```
+
+<p align="center">
+  <img src="docs/images/landing-mockup.svg" alt="Pagina de inicio" width="70%" />
+</p>
+
+Dos botones grandes: **⚡ Wizard** (Modulo 1) y **📷 IDEX · Calibracion asistida por camara** (Modulo 2) -- igual que hacer click en el boton "Wizard" de RatOS.
 
 ## Arquitectura
 
@@ -44,7 +52,7 @@ UI resultante:
 </p>
 
 - **Backend**: dos [componentes de Moonraker](https://moonraker.readthedocs.io/en/latest/components/) (`mks_configurator.py`, `idex_calibration.py`) que exponen endpoints REST propios, sin tocar el core de Moonraker.
-- **Frontend**: HTML/CSS/JS vanilla sin build step, servido directamente por Moonraker (`register_static_file_handler`) desde el mismo origen -- sin CORS, sin API key.
+- **Frontend**: HTML/CSS/JS vanilla sin build step, servido por un **vhost de nginx dedicado** (`install.sh` lo agrega, puerto `7140` por defecto) que hace proxy transparente de `/server/`, `/printer/`, `/api/`, `/access/`, `/machine/` y `/websocket` hacia Moonraker en `:7125` -- mismo origen para el navegador, sin CORS ni API key. *(Nota: Moonraker tiene su propio `register_static_file_handler`, pero fuerza `Content-Disposition: attachment` en todo archivo -- sirve para descargar logs/gcode, no para hostear HTML; por eso el frontend pasa por nginx.)*
 - **Klipper**: los `.cfg` se generan con Jinja2 a partir de plantillas versionadas en `config_templates/`, y se incluyen en tu `printer.cfg` real via `[include ...]`. Los macros de calibraci&#243;n/rendimiento usan `save_variables` para persistir valores sin reiniciar Klipper.
 
 ## Estructura del repositorio
@@ -83,6 +91,7 @@ klipper-mks-idex-suite/
 │   └── camera/example_pi_camera_usb.json
 │
 ├── frontend/                        # vanilla JS/CSS/SVG-Canvas, sin build step
+│   ├── index.html, landing.css, landing.js    # pagina de inicio estilo RatOS (2 botones)
 │   ├── shared/{api.js,theme.css}
 │   ├── configurator/{index.html,wizard.js,wizard.css}
 │   └── idex_calibration/{index.html,calibration.js,overlay.js,jogpad.js,calibration.css}
@@ -92,7 +101,7 @@ klipper-mks-idex-suite/
 │   ├── MODULE1_CONFIGURATOR.md
 │   ├── MODULE2_IDEX_CALIBRATION.md
 │   ├── moonraker_update_manager.conf.example
-│   └── images/{banner,architecture-diagram,wizard-mockup,camera-calibration-mockup}.svg
+│   └── images/{banner,architecture-diagram,landing-mockup,wizard-mockup,camera-calibration-mockup}.svg
 │
 └── tests/
     └── test_offset_calc.py          # python -m unittest discover -s tests

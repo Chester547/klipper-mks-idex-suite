@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>mks-idex-suite</title>
+<link rel="stylesheet" href="shared/theme.css" />
+<link rel="stylesheet" href="landing.css" />
+</head>
+<body>
+  <div class="landing-brand"><span class="dot"></span> mks-idex-suite</div>
+
+  <div class="landing-status" id="statusRow">
+    <span class="mks-badge warn" id="klipperBadge">Klipper: verificando...</span>
+    <span class="mks-badge warn" id="moonrakerBadge">Moonraker: verificando...</span>
+  </div>
+
+  <div class="landing-cards">
+    <a class="launch-card" href="configurator/index.html">
+      <div class="icon">&#9889;</div>
+      <h2>Wizard</h2>
+      <p>Asistente paso a paso para configurar tu placa MKS/Creality: cinematica, drivers TMC, hotends, perifericos y MCUs secundarias. Genera y aplica tu printer.cfg.</p>
+      <span class="cta">Iniciar wizard &#8594;</span>
+    </a>
+
+    <a class="launch-card" href="idex_calibration/index.html">
+      <div class="icon">&#128247;</div>
+      <h2>IDEX &#183; Calibracion asistida por camara</h2>
+      <p>Alinea visualmente las boquillas T0/T1 con reticula, zoom y pad direccional de micro-pasos, y ajusta los perfiles de rendimiento Silencioso/Balanceado/Deportivo.</p>
+      <span class="cta">Abrir calibracion &#8594;</span>
+    </a>
+  </div>
+
+  <div class="landing-footer">
+    mks-idex-suite &#183; <a href="https://github.com/Chester547/klipper-mks-idex-suite" target="_blank" rel="noopener">GitHub</a>
+  </div>
+
+<script src="shared/api.js"></script>
+<script src="landing.js"></script>
+</body>
+</html>

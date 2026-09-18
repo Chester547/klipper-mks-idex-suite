@@ -38,6 +38,23 @@ else
     warn "No se encontro el bloque marcado de mks-idex-suite en moonraker.conf (¿ya estaba desinstalado?)."
 fi
 
+if command -v sudo >/dev/null 2>&1; then
+    removed_nginx=false
+    for f in /etc/nginx/sites-enabled/mks-idex-suite /etc/nginx/sites-available/mks-idex-suite /etc/nginx/conf.d/mks-idex-suite.conf; do
+        if [ -e "$f" ]; then
+            sudo rm -f "$f" && removed_nginx=true
+        fi
+    done
+    if [ "$removed_nginx" = true ] && command -v nginx >/dev/null 2>&1; then
+        if sudo nginx -t >/dev/null 2>&1; then
+            sudo systemctl reload nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null || true
+            log "vhost de nginx removido y nginx recargado."
+        else
+            warn "quite el vhost pero 'nginx -t' fallo despues -- revisa tu configuracion de nginx a mano."
+        fi
+    fi
+fi
+
 if command -v sudo >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
     log "Reiniciando servicio $MOONRAKER_SERVICE..."
     sudo systemctl restart "$MOONRAKER_SERVICE" || warn "no se pudo reiniciar '$MOONRAKER_SERVICE' automaticamente."

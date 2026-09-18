@@ -3,7 +3,7 @@
 ## Requisitos previos
 
 - Klipper + Moonraker ya instalados y funcionando (por ejemplo via [KIAUH](https://github.com/dw-0/kiauh)), con el layout moderno `~/printer_data/`.
-- Mainsail o Fluidd ya accesibles.
+- Mainsail o Fluidd ya accesibles (lo que implica que **nginx** ya esta instalado -- lo reutilizamos, ver abajo).
 - Acceso SSH a la Raspberry Pi (u otro host) donde corre Moonraker.
 - Para el Modulo 2: una camara USB (V4L2) o CSI (libcamera) ya visible para [Crowsnest](https://github.com/mainsail-crew/crowsnest), y una base magnetica o soporte fijo para apuntarla a la zona de impresion.
 
@@ -23,13 +23,26 @@ Que hace exactamente:
 2. Symlinkea `moonraker/components/*.py` dentro de `moonraker/moonraker/components/`.
 3. Agrega `[mks_configurator]`, `[idex_calibration]` y `[update_manager mks_idex_suite]` a `moonraker.conf` (con backup automatico; no hace nada si esas secciones ya existen).
 4. Copia los macros base a `printer_data/config/mks-idex-suite-macros/`.
-5. Reinicia Moonraker (solo en la instalacion inicial -- ver comentarios en el script sobre por que no lo hace en cada actualizacion).
+5. Agrega un vhost de nginx dedicado (puerto `7140` por defecto, variable `MKS_SUITE_PORT`) que sirve el frontend -- ver la seccion [nginx](#nginx) si algo falla aca.
+6. Reinicia Moonraker (solo en la instalacion inicial -- ver comentarios en el script sobre por que no lo hace en cada actualizacion).
 
-Al terminar, la UI queda en:
-- Configurador (Modulo 1): `http://<ip>:7125/mks-suite/ui/configurator/index.html`
-- Calibracion IDEX (Modulo 2): `http://<ip>:7125/mks-suite/ui/idex_calibration/index.html`
+Al terminar, la pagina de inicio (con los botones **Wizard** y **IDEX · Calibracion asistida por camara**) queda en:
 
-Puedes agregarlas como "Custom Links" en Mainsail/Fluidd (Settings -> Interface).
+```
+http://<ip-de-tu-pi>:7140/
+```
+
+Puedes agregarla como "Custom Link" en Mainsail/Fluidd (Settings -> Interface).
+
+## nginx
+
+El frontend **no** se sirve con el `register_static_file_handler` de Moonraker: esa API fuerza el header `Content-Disposition: attachment` en cualquier archivo que sirve (esta pensada para descargar `klippy.log`/gcode, no para hostear una pagina web), asi que el navegador termina descargando el `.html` en vez de mostrarlo -- eso es lo que viste si accediste a una URL bajo `:7125/mks-suite/ui/...` de una version vieja de este README.
+
+En su lugar, `install.sh` agrega un `server {}` nuevo y aislado (no toca tu vhost de Mainsail/Fluidd) en `/etc/nginx/sites-available/mks-idex-suite` (o `/etc/nginx/conf.d/mks-idex-suite.conf` si tu distro no usa `sites-available`), que:
+- Sirve `frontend/` como archivos estaticos (con `Content-Type` correcto, vía nginx).
+- Hace `proxy_pass` de `/websocket` y de `/server/`, `/printer/`, `/api/`, `/access/`, `/machine/` hacia Moonraker en `127.0.0.1:7125`, para que el frontend siga llamando a rutas relativas (mismo origen, sin CORS).
+
+Antes de recargar nginx, el script corre `nginx -t`; si falla, **no** recarga nada (tu sitio actual sigue intacto) y te muestra el error. Si `install.sh` no pudo configurarlo solo (nginx no instalado, sin `sudo`, layout de directorios no reconocido), agregalo a mano con el mismo contenido -- podes copiarlo de `/etc/nginx/sites-available/mks-idex-suite` en cualquier instalacion que si haya funcionado, o pedir el bloque completo (esta documentado dentro de la funcion `setup_nginx()` en [install.sh](../install.sh)).
 
 ## Actualizaciones
 

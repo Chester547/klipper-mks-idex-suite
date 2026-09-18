@@ -46,7 +46,7 @@
   <text x="400" y="386" text-anchor="middle" fill="#8ea395" font-size="11.5">klippy_apis</text>
 
   <rect x="110" y="412" width="380" height="36" rx="8" fill="#12160f" stroke="#2a352f"/>
-  <text x="300" y="435" text-anchor="middle" fill="#8ea395" font-size="11.5">register_static_file_handler(/mks-suite/ui)</text>
+  <text x="300" y="435" text-anchor="middle" fill="#8ea395" font-size="11.5" font-family="SFMono-Regular,Consolas,monospace">/server/mks_suite/* (REST, sin frontend)</text>
 
   <!-- Klipper box -->
   <rect x="590" y="264" width="420" height="200" rx="12" fill="#161c19" stroke="#3a4a41" stroke-width="1.5"/>
@@ -72,14 +72,14 @@
   <text x="520" y="352" fill="#39ff6a" font-size="11">gcode/script &#183; objects/query</text>
 
   <!-- Frontend row -->
-  <line x1="200" y1="464" x2="200" y2="520" stroke="#39ff6a" stroke-width="2" marker-end="url(#arrowAccent)"/>
-
   <rect x="60" y="522" width="450" height="90" rx="12" fill="#161c19" stroke="#3a4a41" stroke-width="1.5"/>
-  <text x="80" y="546" fill="#e7efe9" font-size="14" font-weight="700">Frontend estatico (sin build step)</text>
-  <rect x="80" y="558" width="190" height="38" rx="8" fill="#1c2420" stroke="#2a352f"/>
-  <text x="175" y="582" text-anchor="middle" fill="#c9d6cf" font-size="11.5">configurator/ (wizard.js)</text>
-  <rect x="290" y="558" width="200" height="38" rx="8" fill="#1c2420" stroke="#2a352f"/>
-  <text x="390" y="582" text-anchor="middle" fill="#c9d6cf" font-size="11.5">idex_calibration/ (calibration.js)</text>
+  <text x="80" y="546" fill="#e7efe9" font-size="14" font-weight="700">frontend/ (archivos, sin build step)</text>
+  <rect x="80" y="558" width="140" height="38" rx="8" fill="#1c2420" stroke="#2a352f"/>
+  <text x="150" y="582" text-anchor="middle" fill="#c9d6cf" font-size="11">index.html (2 botones)</text>
+  <rect x="230" y="558" width="120" height="38" rx="8" fill="#1c2420" stroke="#2a352f"/>
+  <text x="290" y="582" text-anchor="middle" fill="#c9d6cf" font-size="11">configurator/</text>
+  <rect x="360" y="558" width="140" height="38" rx="8" fill="#1c2420" stroke="#2a352f"/>
+  <text x="430" y="582" text-anchor="middle" fill="#c9d6cf" font-size="11">idex_calibration/</text>
 
   <!-- Camera / Crowsnest -->
   <rect x="560" y="522" width="230" height="90" rx="12" fill="#161c19" stroke="#3a4a41" stroke-width="1.5"/>
@@ -90,12 +90,23 @@
 
   <line x1="560" y1="565" x2="490" y2="577" stroke="#5c6b62" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <line x1="285" y1="612" x2="285" y2="650" stroke="#39ff6a" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <!-- nginx -->
+  <line x1="285" y1="612" x2="285" y2="644" stroke="#39ff6a" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <text x="298" y="632" fill="#39ff6a" font-size="10.5">root</text>
+
+  <line x1="850" y1="494" x2="850" y2="644" stroke="#39ff6a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrowAccent)"/>
+  <text x="858" y="570" fill="#39ff6a" font-size="10.5">proxy_pass</text>
+
+  <rect x="120" y="646" width="700" height="60" rx="12" fill="#1c2420" stroke="#39ff6a" stroke-width="1.5"/>
+  <text x="140" y="668" fill="#39ff6a" font-size="14" font-weight="700">nginx :7140 (vhost dedicado, agregado por install.sh)</text>
+  <text x="140" y="688" fill="#8ea395" font-size="11" font-family="SFMono-Regular,Consolas,monospace">root frontend/ &#183; proxy_pass /server /printer /api /access /machine /websocket -&gt; 127.0.0.1:7125</text>
+
+  <line x1="470" y1="706" x2="470" y2="726" stroke="#39ff6a" stroke-width="2" marker-end="url(#arrowAccent)"/>
 
   <!-- Browser -->
-  <rect x="120" y="652" width="700" height="80" rx="12" fill="#0f1512" stroke="#39ff6a" stroke-width="1.5"/>
-  <text x="470" y="682" text-anchor="middle" fill="#39ff6a" font-size="15" font-weight="700">Navegador</text>
-  <text x="470" y="704" text-anchor="middle" fill="#8ea395" font-size="12">Mainsail / Fluidd + pesta&#241;as mks-suite (mismo origen :7125, sin CORS)</text>
+  <rect x="120" y="728" width="700" height="70" rx="12" fill="#0f1512" stroke="#39ff6a" stroke-width="1.5"/>
+  <text x="470" y="756" text-anchor="middle" fill="#39ff6a" font-size="15" font-weight="700">Navegador</text>
+  <text x="470" y="778" text-anchor="middle" fill="#8ea395" font-size="12">http://&lt;ip&gt;:7140/ -- mismo origen para la API, sin CORS</text>
 
   <!-- update_manager loop -->
   <path d="M 720 158 C 900 158, 960 60, 720 56" fill="none" stroke="#8ea395" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>

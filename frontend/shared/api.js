@@ -1,6 +1,7 @@
 // Cliente minimo para la API REST que exponen mks_configurator.py / idex_calibration.py.
-// Servido por Moonraker desde el mismo origen (register_static_file_handler),
-// asi que las llamadas son same-origin y no necesitan API key ni CORS.
+// El vhost de nginx que sirve este frontend (ver install.sh) hace proxy_pass
+// de /server/... hacia Moonraker en el mismo origen, asi que estas llamadas
+// relativas no necesitan API key ni CORS.
 
 const MksApi = (() => {
   async function request(method, path, body) {

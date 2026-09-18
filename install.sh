@@ -12,6 +12,7 @@
 #   MOONRAKER_ENV     default: $HOME/moonraker-env
 #   PRINTER_DATA      default: $HOME/printer_data
 #   MOONRAKER_SERVICE default: moonraker
+#   MKS_SUITE_PORT    default: 7140 (puerto nginx dedicado para el frontend)
 #
 # El script es idempotente: puedes volver a ejecutarlo tras un 'git pull'
 # para refrescar symlinks y dependencias sin duplicar la config existente.
@@ -25,6 +26,7 @@ MOONRAKER_DIR="${MOONRAKER_DIR:-$HOME/moonraker}"
 MOONRAKER_ENV="${MOONRAKER_ENV:-$HOME/moonraker-env}"
 PRINTER_DATA="${PRINTER_DATA:-$HOME/printer_data}"
 MOONRAKER_SERVICE="${MOONRAKER_SERVICE:-moonraker}"
+MKS_SUITE_PORT="${MKS_SUITE_PORT:-7140}"
 
 MOONRAKER_CONF="$PRINTER_DATA/config/moonraker.conf"
 COMPONENTS_DST="$MOONRAKER_DIR/moonraker/components"
@@ -35,6 +37,99 @@ die()  { printf '\033[1;31m[mks-idex-suite] ERROR:\033[0m %s\n' "$1" >&2; exit 1
 
 require_dir() {
     [ -d "$1" ] || die "no existe '$1' ($2). Ajusta la variable de entorno correspondiente o instala Klipper/Moonraker primero (ej. via KIAUH)."
+}
+
+# Escribe un vhost de nginx dedicado para servir frontend/ con Content-Type
+# correcto (Moonraker's register_static_file_handler fuerza descarga de todo
+# archivo, asi que NO sirve para hostear HTML -- ver docs/INSTALL.md) y hace
+# proxy de la API de Moonraker para mantener todo en el mismo origen (sin
+# CORS). Nunca toca el vhost de Mainsail/Fluidd existente, nunca hace
+# 'restart' (solo 'reload' tras un 'nginx -t' exitoso), y cualquier fallo
+# aqui es un warn, no aborta el resto de la instalacion.
+setup_nginx() {
+    if ! command -v nginx >/dev/null 2>&1; then
+        warn "nginx no esta instalado -- el frontend no se podra ver hasta que instales nginx o lo configures a mano."
+        return 1
+    fi
+    if ! command -v sudo >/dev/null 2>&1; then
+        warn "sin 'sudo' disponible: no puedo escribir la config de nginx. Configurala a mano (ver docs/INSTALL.md)."
+        return 1
+    fi
+
+    local conf_path="" enable_path=""
+    if [ -d /etc/nginx/sites-available ]; then
+        conf_path="/etc/nginx/sites-available/mks-idex-suite"
+        enable_path="/etc/nginx/sites-enabled/mks-idex-suite"
+    elif [ -d /etc/nginx/conf.d ]; then
+        conf_path="/etc/nginx/conf.d/mks-idex-suite.conf"
+    else
+        warn "no encontre /etc/nginx/sites-available ni /etc/nginx/conf.d -- configura el vhost a mano."
+        return 1
+    fi
+
+    local tmp_conf
+    tmp_conf="$(mktemp)"
+    cat > "$tmp_conf" <<NGINX_EOF
+# Generado por mks-idex-suite install.sh -- no editar a mano, se sobrescribe
+# en cada instalacion/actualizacion.
+server {
+    listen $MKS_SUITE_PORT;
+    server_name _;
+
+    root $SUITE_DIR/frontend;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location /websocket {
+        proxy_pass http://127.0.0.1:7125/websocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$http_host;
+        proxy_read_timeout 86400;
+    }
+
+    location ~ ^/(printer|api|access|machine|server)/ {
+        proxy_pass http://127.0.0.1:7125\$request_uri;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+NGINX_EOF
+
+    if ! sudo cp "$tmp_conf" "$conf_path"; then
+        warn "no pude escribir $conf_path (¿permisos?). Configura el vhost a mano."
+        rm -f "$tmp_conf"
+        return 1
+    fi
+    rm -f "$tmp_conf"
+
+    if [ -n "$enable_path" ]; then
+        sudo ln -sf "$conf_path" "$enable_path" || warn "no pude symlinkear $enable_path"
+    fi
+
+    local test_log
+    test_log="$(mktemp)"
+    if sudo nginx -t >"$test_log" 2>&1; then
+        if sudo systemctl reload nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null; then
+            log "nginx configurado y recargado -- frontend en el puerto $MKS_SUITE_PORT."
+            rm -f "$test_log"
+            return 0
+        else
+            warn "nginx -t paso pero el reload fallo; reinicia nginx a mano."
+            rm -f "$test_log"
+            return 1
+        fi
+    else
+        warn "nginx -t fallo con la nueva config -- NO se recargo nginx, tu sitio actual (Mainsail/Fluidd) sigue intacto."
+        warn "Detalle: $(cat "$test_log")"
+        sudo rm -f "$conf_path" "$enable_path" 2>/dev/null || true
+        rm -f "$test_log"
+        return 1
+    fi
 }
 
 log "Repo de la suite: $SUITE_DIR"
@@ -121,6 +216,11 @@ done
 warn "Estos archivos se sobrescriben en cada instalacion/actualizacion -- no los edites a mano, ajusta valores desde el perfil o copia el macro con otro nombre para personalizarlo."
 
 # ---------------------------------------------------------------------------
+log "Configurando nginx para servir el frontend (puerto $MKS_SUITE_PORT)..."
+nginx_ok=true
+setup_nginx || nginx_ok=false
+
+# ---------------------------------------------------------------------------
 # Solo reiniciamos Moonraker nosotros mismos en la instalacion inicial. En
 # actualizaciones posteriores este script puede ser invocado por el propio
 # Moonraker Update Manager (install_script), que ya reinicia el servicio via
@@ -142,17 +242,18 @@ cat <<EOF
 
 $(printf '\033[1;32m%s\033[0m' "Instalacion completa.")
 
-UI del asistente de configuracion (Modulo 1):
-  http://<ip-de-tu-pi>:7125/mks-suite/ui/configurator/index.html
+Pagina de inicio (wizard + calibracion IDEX):
+  http://<ip-de-tu-pi>:$MKS_SUITE_PORT/
 
-UI de calibracion IDEX por camara (Modulo 2):
-  http://<ip-de-tu-pi>:7125/mks-suite/ui/idex_calibration/index.html
-
-Tip: en Mainsail/Fluidd puedes agregar estos links como accesos externos
-desde Settings -> Interface -> Custom Links.
+Tip: en Mainsail/Fluidd puedes agregar ese link como acceso externo desde
+Settings -> Interface -> Custom Links.
 
 Si es la primera instalacion, revisa docs/INSTALL.md antes de aplicar un
 perfil de hardware: los pines de placa se generan a partir de referencias de
 comunidad y DEBEN verificarse contra tu revision fisica antes de calentar
 hotend/cama por primera vez.
 EOF
+
+if [ "$nginx_ok" = false ]; then
+    warn "nginx no quedo configurado -- la pagina de arriba no va a cargar hasta que lo arregles (ver docs/INSTALL.md#nginx)."
+fi

@@ -37,10 +37,11 @@ class MksConfigurator:
         self.paths = SuitePaths(config)
         self.store = ProfileStore(self.paths, "hardware", "hardware_profile.schema.json")
 
-        try:
-            self.server.register_static_file_handler("/mks-suite/ui", str(self.paths.repo_path / "frontend"))
-        except Exception:
-            logger.info("mks_suite: static handler /mks-suite/ui ya estaba registrado")
+        # El frontend (HTML) se sirve por nginx (install.sh agrega un vhost
+        # dedicado), NO por Moonraker: su register_static_file_handler fuerza
+        # 'Content-Disposition: attachment' en todo archivo (pensado para
+        # descargar logs/gcode), lo que hace que el navegador descargue el
+        # .html en vez de renderizarlo. Ver docs/INSTALL.md.
 
         self.server.register_endpoint(
             "/server/mks_suite/catalog", ["GET"], self._handle_catalog

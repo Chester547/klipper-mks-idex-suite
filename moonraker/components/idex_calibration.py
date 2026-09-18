@@ -56,10 +56,8 @@ class IdexCalibration:
         self.database = self.server.lookup_component("database")
         self.database.register_local_namespace(SUITE_NAMESPACE)
 
-        try:
-            self.server.register_static_file_handler("/mks-suite/ui", str(self.paths.repo_path / "frontend"))
-        except Exception:
-            logger.info("mks_suite: static handler /mks-suite/ui ya estaba registrado")
+        # El frontend lo sirve nginx (ver install.sh), no Moonraker -- ver la
+        # nota equivalente en mks_configurator.py.
 
         eps = [
             ("/server/mks_suite/camera_profiles", ["GET"], self._handle_camera_list_or_get),
