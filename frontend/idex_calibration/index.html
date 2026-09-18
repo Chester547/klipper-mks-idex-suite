@@ -20,6 +20,21 @@
       <select id="camProfileSelect" style="width:100%;"></select>
     </div>
     <div class="mks-card" style="padding:12px;">
+      <h3 style="font-size:13px;">Punto de referencia (T0)</h3>
+      <p class="hint" style="margin:0 0 8px;">A donde va T0 al iniciar -- la camara con base magnetica se apunta ahi.</p>
+      <div class="mks-seg" id="refModeSeg" style="flex-wrap:wrap;">
+        <button data-refmode="camera" class="active">Camara</button>
+        <button data-refmode="bed_center">Centro cama</button>
+        <button data-refmode="bed_front">Borde frontal</button>
+        <button data-refmode="bed_back">Borde trasero</button>
+        <button data-refmode="manual">Manual</button>
+      </div>
+      <div id="refManualFields" hidden style="display:flex; gap:8px; margin-top:8px;">
+        <input type="number" id="refManualX" placeholder="X" style="width:50%; background:var(--bg-input); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:6px 8px;" />
+        <input type="number" id="refManualY" placeholder="Y" style="width:50%; background:var(--bg-input); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:6px 8px;" />
+      </div>
+    </div>
+    <div class="mks-card" style="padding:12px;">
       <h3 style="font-size:13px;">Perfil de rendimiento</h3>
       <div class="mks-seg" id="perfSeg">
         <button data-mode="quiet">Silencioso</button>

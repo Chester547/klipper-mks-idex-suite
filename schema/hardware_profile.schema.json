@@ -51,6 +51,17 @@
       "enum": ["cartesian", "corexy", "corexz", "idex"]
     },
 
+    "bed_size_x": {
+      "type": "number",
+      "default": 235,
+      "description": "Recorrido util en X (mm). Usado por el Modulo 2 para calcular centro/bordes de cama al iniciar una calibracion."
+    },
+    "bed_size_y": {
+      "type": "number",
+      "default": 235,
+      "description": "Recorrido util en Y (mm). Usado por el Modulo 2 para calcular centro/bordes de cama al iniciar una calibracion."
+    },
+
     "secondary_mcus": {
       "type": "array",
       "items": {

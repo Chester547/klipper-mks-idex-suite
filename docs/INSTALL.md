@@ -3,7 +3,7 @@
 ## Requisitos previos
 
 - Klipper + Moonraker ya instalados y funcionando (por ejemplo via [KIAUH](https://github.com/dw-0/kiauh)), con el layout moderno `~/printer_data/`.
-- Mainsail o Fluidd ya accesibles (lo que implica que **nginx** ya esta instalado -- lo reutilizamos, ver abajo).
+- **nginx**: si ya tenes Mainsail o Fluidd accesibles normalmente ya esta instalado y `install.sh` reutiliza el mismo binario (agrega un vhost nuevo, sin tocar el de Mainsail/Fluidd). Si tu instalacion es minima (solo Klipper+Moonraker, ej. una VM de pruebas) y no lo tenes, `install.sh` lo instala solo via `apt-get` en Debian/Ubuntu -- en otras distros instalalo vos antes (`nginx` es el paquete en casi todas).
 - Acceso SSH a la Raspberry Pi (u otro host) donde corre Moonraker.
 - Para el Modulo 2: una camara USB (V4L2) o CSI (libcamera) ya visible para [Crowsnest](https://github.com/mainsail-crew/crowsnest), y una base magnetica o soporte fijo para apuntarla a la zona de impresion.
 
@@ -32,15 +32,32 @@ Al terminar, la pagina de inicio (con los botones **Wizard** y **IDEX · Calibra
 http://<ip-de-tu-pi>:7140/
 ```
 
-Puedes agregarla como "Custom Link" en Mainsail/Fluidd (Settings -> Interface).
+**Fluidd no tiene forma de agregar links externos a su barra lateral** (no es una limitacion nuestra: la interfaz no expone esa opcion, solo temas/logo/`custom.css`). La forma practica de acceder es guardar esa direccion como favorito del navegador, o "Agregar a pantalla de inicio" en el celular -- asi se usan en la practica la mayoria de las herramientas de terceros del ecosistema Klipper cuando no hay Mainsail de por medio.
+
+Si usas **Mainsail** (o lo sumas mas adelante), si soporta un boton real en la barra lateral via un archivo `navi.json` en tu carpeta `.theme/` de Mainsail:
+
+```json
+[
+  {
+    "title": "mks-idex-suite",
+    "href": "http://<ip-de-tu-pi>:7140/",
+    "target": "_blank",
+    "position": 85
+  }
+]
+```
+
+Ver la [documentacion oficial de Mainsail sobre Custom Navigation](https://docs.mainsail.xyz/features/custom-themes/custom-navigation/) para agregarle un icono u otras opciones.
 
 ## nginx
 
 El frontend **no** se sirve con el `register_static_file_handler` de Moonraker: esa API fuerza el header `Content-Disposition: attachment` en cualquier archivo que sirve (esta pensada para descargar `klippy.log`/gcode, no para hostear una pagina web), asi que el navegador termina descargando el `.html` en vez de mostrarlo -- eso es lo que viste si accediste a una URL bajo `:7125/mks-suite/ui/...` de una version vieja de este README.
 
-En su lugar, `install.sh` agrega un `server {}` nuevo y aislado (no toca tu vhost de Mainsail/Fluidd) en `/etc/nginx/sites-available/mks-idex-suite` (o `/etc/nginx/conf.d/mks-idex-suite.conf` si tu distro no usa `sites-available`), que:
-- Sirve `frontend/` como archivos estaticos (con `Content-Type` correcto, vía nginx).
-- Hace `proxy_pass` de `/websocket` y de `/server/`, `/printer/`, `/api/`, `/access/`, `/machine/` hacia Moonraker en `127.0.0.1:7125`, para que el frontend siga llamando a rutas relativas (mismo origen, sin CORS).
+En su lugar, `install.sh`:
+- Instala `nginx` via `apt-get` si no lo encuentra (solo en Debian/Ubuntu; en otras distros hazlo vos antes de correr el script).
+- Agrega un `server {}` nuevo y aislado (no toca tu vhost de Mainsail/Fluidd) en `/etc/nginx/sites-available/mks-idex-suite` (o `/etc/nginx/conf.d/mks-idex-suite.conf` si tu distro no usa `sites-available`), que:
+  - Sirve `frontend/` como archivos estaticos (con `Content-Type` correcto, vía nginx).
+  - Hace `proxy_pass` de `/websocket` y de `/server/`, `/printer/`, `/api/`, `/access/`, `/machine/` hacia Moonraker en `127.0.0.1:7125`, para que el frontend siga llamando a rutas relativas (mismo origen, sin CORS).
 
 Antes de recargar nginx, el script corre `nginx -t`; si falla, **no** recarga nada (tu sitio actual sigue intacto) y te muestra el error. Si `install.sh` no pudo configurarlo solo (nginx no instalado, sin `sudo`, layout de directorios no reconocido), agregalo a mano con el mismo contenido -- podes copiarlo de `/etc/nginx/sites-available/mks-idex-suite` en cualquier instalacion que si haya funcionado, o pedir el bloque completo (esta documentado dentro de la funcion `setup_nginx()` en [install.sh](../install.sh)).
 

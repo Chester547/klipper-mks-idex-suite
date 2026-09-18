@@ -76,6 +76,62 @@ def compute_idex_offset(ref_x: float, ref_y: float, pos_x: float, pos_y: float, 
     return (round(ref_x - pos_x, 4), round(ref_y - pos_y, 4))
 
 
+VALID_REFERENCE_MODES = ("camera", "bed_center", "bed_front", "bed_back", "manual")
+# Margen de seguridad desde el borde fisico real de la cama para los presets
+# "borde frontal"/"borde trasero" -- evita mandar la boquilla justo al limite
+# (clips de cama, fin de carrera mecanico).
+BED_EDGE_MARGIN_MM = 15
+
+
+def compute_reference_point(hw_profile: dict, camera: dict, mode: str, manual_x, manual_y) -> dict:
+    """Calcula el punto (x, y, z_clearance) al que se manda T0 al iniciar una calibracion.
+
+    'camera' usa la referencia fija guardada en el perfil de camara (donde
+    apunta la base magnetica); los demas modos se calculan a partir de
+    bed_size_x/y del perfil de hardware. 'manual' valida que la coordenada
+    quede dentro de la cama antes de aceptarla (esto termina moviendo motores
+    de verdad).
+    """
+    bed_x = hw_profile.get("bed_size_x", 235)
+    bed_y = hw_profile.get("bed_size_y", 235)
+    mount = camera.get("mount", {})
+    z_clearance = mount.get("reference_z_clearance", 5)
+
+    if mode == "manual":
+        if manual_x is None or manual_y is None:
+            raise ValueError("reference_mode=manual requiere manual_x y manual_y")
+        if not (0 <= manual_x <= bed_x) or not (0 <= manual_y <= bed_y):
+            raise ValueError(
+                f"coordenada manual ({manual_x}, {manual_y}) fuera de la cama "
+                f"(0-{bed_x} x 0-{bed_y})"
+            )
+        return {"x": manual_x, "y": manual_y, "z_clearance": z_clearance}
+
+    if mode == "bed_center":
+        return {"x": round(bed_x / 2, 2), "y": round(bed_y / 2, 2), "z_clearance": z_clearance}
+
+    if mode == "bed_front":
+        return {"x": round(bed_x / 2, 2), "y": min(BED_EDGE_MARGIN_MM, bed_y / 2), "z_clearance": z_clearance}
+
+    if mode == "bed_back":
+        return {
+            "x": round(bed_x / 2, 2),
+            "y": round(max(bed_y - BED_EDGE_MARGIN_MM, bed_y / 2), 2),
+            "z_clearance": z_clearance,
+        }
+
+    if mode != "camera":
+        raise ValueError(f"reference_mode invalido: {mode!r}")
+
+    # mode == "camera": punto fijo donde apunta la camara (montaje magnetico),
+    # guardado en el perfil de camara -- comportamiento historico/default.
+    return {
+        "x": mount.get("reference_x", 110),
+        "y": mount.get("reference_y", 110),
+        "z_clearance": z_clearance,
+    }
+
+
 def validate_against_schema(instance: dict, schema: dict) -> None:
     """Lanza jsonschema.ValidationError con un mensaje legible si el perfil es invalido."""
     validator = jsonschema.Draft7Validator(schema)

@@ -47,8 +47,14 @@ const MksApi = (() => {
     deleteCameraProfile: (id) => post("/server/mks_suite/camera_profiles/delete", { profile_id: id }),
 
     // Modulo 2 -- sesion IDEX
-    idexStart: (hardwareProfileId, cameraId) =>
-      post("/server/mks_suite/idex/start", { hardware_profile_id: hardwareProfileId, camera_id: cameraId }),
+    idexStart: (hardwareProfileId, cameraId, referenceMode, manualX, manualY) =>
+      post("/server/mks_suite/idex/start", {
+        hardware_profile_id: hardwareProfileId,
+        camera_id: cameraId,
+        reference_mode: referenceMode || "camera",
+        manual_x: manualX,
+        manual_y: manualY,
+      }),
     idexSelectTool: (tool) => post("/server/mks_suite/idex/select_tool", { tool }),
     idexJog: (axis, distance, direction) => post("/server/mks_suite/idex/jog", { axis, distance, direction }),
     idexHomeReference: () => post("/server/mks_suite/idex/home_reference"),

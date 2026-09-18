@@ -28,6 +28,8 @@ function makeEmptyProfile() {
     suite_schema_version: 1,
     board: { id: "mks_robin_nano_v2", mcu: "", baud: 250000, verified_pinout: false },
     kinematics: "cartesian",
+    bed_size_x: 235,
+    bed_size_y: 235,
     secondary_mcus: [],
     drivers: {},
     toolheads: [
@@ -160,6 +162,14 @@ function renderStepBoard() {
             <input type="checkbox" data-bind="board.verified_pinout" /> Ya verifique el pinout contra mi placa fisica
           </label>
         </div>
+      </div>
+    </div>
+    <div class="mks-card">
+      <h3>Dimensiones de cama</h3>
+      <p class="hint">Recorrido util en mm. El Modulo 2 (calibracion IDEX) los usa para calcular el centro y los bordes de la cama.</p>
+      <div class="mks-grid">
+        <div class="mks-field"><label>Ancho (X)</label><input type="number" data-bind="bed_size_x" data-number="1" data-default="235" /></div>
+        <div class="mks-field"><label>Profundidad (Y)</label><input type="number" data-bind="bed_size_y" data-number="1" data-default="235" /></div>
       </div>
     </div>`;
 }

@@ -10,6 +10,7 @@ const state = {
   activeTool: "T0",
   zoom: 1,
   stepMm: 0.1,
+  referenceMode: "camera",
 };
 
 function esc(s) {
@@ -88,20 +89,46 @@ async function refreshSelects() {
     state.camProfiles.map((p) => `<option value="${esc(p.camera_id)}">${esc(p.name || p.camera_id)}</option>`).join("");
 }
 
+const REFERENCE_MODE_LABELS = {
+  camera: "la referencia fija de la camara",
+  bed_center: "el centro de la cama",
+  bed_front: "el borde frontal de la cama",
+  bed_back: "el borde trasero de la cama",
+  manual: "la coordenada manual",
+};
+
 async function startSession() {
   if (!state.selectedHw || !state.selectedCam) {
     logActivity("Selecciona un perfil de hardware y uno de camara antes de iniciar.", true);
     return;
   }
+
+  let manualX, manualY;
+  if (state.referenceMode === "manual") {
+    manualX = Number(document.getElementById("refManualX").value);
+    manualY = Number(document.getElementById("refManualY").value);
+    if (!Number.isFinite(manualX) || !Number.isFinite(manualY)) {
+      logActivity("Ingresa X e Y para el punto de referencia manual.", true);
+      return;
+    }
+  }
+
   try {
-    const session = await MksApi.idexStart(state.selectedHw, state.selectedCam);
+    const session = await MksApi.idexStart(state.selectedHw, state.selectedCam, state.referenceMode, manualX, manualY);
     document.getElementById("sessionStatus").textContent = `sesion activa -- herramienta ${session.active_tool}`;
     state.activeTool = session.active_tool;
     setActiveSeg(document.getElementById("toolSeg"), "button", (b) => b.dataset.tool === state.activeTool);
-    logActivity("Sesion iniciada: G28 + T0 en la referencia de la camara.");
+    const label = REFERENCE_MODE_LABELS[state.referenceMode] || state.referenceMode;
+    logActivity(`Sesion iniciada: G28 + T0 en ${label} (X=${session.reference.x} Y=${session.reference.y}).`);
   } catch (e) {
     logActivity(e.message, true);
   }
+}
+
+function selectReferenceMode(mode) {
+  state.referenceMode = mode;
+  setActiveSeg(document.getElementById("refModeSeg"), "button", (b) => b.dataset.refmode === mode);
+  document.getElementById("refManualFields").hidden = mode !== "manual";
 }
 
 async function selectTool(tool) {
@@ -201,6 +228,10 @@ async function boot() {
   document.getElementById("perfSeg").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-mode]");
     if (btn) setPerformanceMode(btn.dataset.mode);
+  });
+  document.getElementById("refModeSeg").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-refmode]");
+    if (btn) selectReferenceMode(btn.dataset.refmode);
   });
 
   applyZoom();

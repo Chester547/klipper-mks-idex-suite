@@ -7,7 +7,14 @@
 
 ## Flujo de calibracion
 
-1. **Iniciar** (`POST /idex/start`): `G28`, guarda la referencia de la camara en variables de Klipper (`SAVE_VARIABLE`) y manda `T0` a esa coordenada.
+0. **Elegir punto de referencia**: antes de iniciar, la UI deja elegir a donde va T0 -- util porque la camara tiene base magnetica y se puede reapuntar:
+   - **Camara**: el punto fijo guardado en el perfil de camara (`mount.reference_x/y`) -- default historico.
+   - **Centro de cama** / **Borde frontal** / **Borde trasero**: calculados a partir de `bed_size_x`/`bed_size_y` del perfil de hardware (paso "Placa base" del Modulo 1), con un margen de seguridad de 15 mm desde el borde real para los presets de borde (`BED_EDGE_MARGIN_MM` en [`mks_suite_common.py`](../moonraker/components/mks_suite_common.py)).
+   - **Manual**: coordenadas X/Y que ingreses a mano; el backend valida que queden dentro de la cama (`0 <= x <= bed_size_x`, idem Y) antes de mover nada.
+
+   Ver [`compute_reference_point`](../moonraker/components/mks_suite_common.py) y sus tests en [`tests/test_offset_calc.py`](../tests/test_offset_calc.py).
+
+1. **Iniciar** (`POST /idex/start`): `G28`, guarda la referencia elegida en variables de Klipper (`SAVE_VARIABLE`) y manda `T0` a esa coordenada.
 2. **Conmutar T0/T1** (`POST /idex/select_tool`): corre el macro `T0` o `T1` (cambia `dual_carriage` + extrusor activo) y vuelve a mandar el carro activo a la misma coordenada logica de referencia -- ahi es donde tipicamente aparece la desalineacion fisica de T1.
 3. **Ajuste fino**: el pad direccional (X+/X-/Y+/Y-, pasos de 0.05/0.1/0.5/1 mm) mueve el carro activo con `G91` + `G1` + `G90` hasta que la boquilla quede centrada en la retícula verde.
 4. **Capturar offset** (`POST /idex/capture_offset`): lee la posicion actual del toolhead y la referencia guardada, calcula `offset = referencia - posicion` (ver [`compute_idex_offset`](../moonraker/components/mks_suite_common.py) y su test en [`tests/test_offset_calc.py`](../tests/test_offset_calc.py)), aplica `SET_GCODE_OFFSET ... MOVE=1` de inmediato y lo persiste con `SAVE_VARIABLE` para que el macro `T1` lo vuelva a aplicar solo en cada cambio de herramienta futuro -- sin necesitar `SAVE_CONFIG` ni reiniciar Klipper.

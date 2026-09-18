@@ -4,7 +4,9 @@ Se registra en moonraker.conf como [idex_calibration]. Expone:
   GET  /server/mks_suite/camera_profiles[?profile_id=...]
   POST /server/mks_suite/camera_profiles/save
   POST /server/mks_suite/camera_profiles/delete
-  POST /server/mks_suite/idex/start            (body: {hardware_profile_id, camera_id})
+  POST /server/mks_suite/idex/start            (body: {hardware_profile_id, camera_id,
+                                                        reference_mode: "camera"|"bed_center"|"bed_front"|"bed_back"|"manual",
+                                                        manual_x, manual_y})
   POST /server/mks_suite/idex/select_tool      (body: {tool: "T0"|"T1"})
   POST /server/mks_suite/idex/jog              (body: {axis: "X"|"Y", distance, direction})
   POST /server/mks_suite/idex/home_reference
@@ -28,9 +30,11 @@ from jsonschema import ValidationError
 
 from .mks_suite_common import (
     SUITE_NAMESPACE,
+    VALID_REFERENCE_MODES,
     ProfileStore,
     SuitePaths,
     compute_idex_offset,
+    compute_reference_point,
     load_schema,
     validate_against_schema,
 )
@@ -50,6 +54,7 @@ class IdexCalibration:
     def __init__(self, config) -> None:
         self.server = config.get_server()
         self.paths = SuitePaths(config)
+        self.hardware_store = ProfileStore(self.paths, "hardware", "hardware_profile.schema.json")
         self.camera_store = ProfileStore(self.paths, "camera", "camera_profile.schema.json")
         self.calibration_schema = load_schema(self.paths.schema_path, "calibration_data.schema.json")
 
@@ -109,24 +114,31 @@ class IdexCalibration:
 
     # ---- sesion de calibracion IDEX ---------------------------------------
 
-    async def _get_camera_ref(self, camera_id: str) -> dict:
-        camera = self.camera_store.get(camera_id)
-        if camera is None:
-            raise self.server.error(f"perfil de camara '{camera_id}' no existe", 404)
-        mount = camera.get("mount", {})
-        return {
-            "x": mount.get("reference_x", 110),
-            "y": mount.get("reference_y", 110),
-            "z_clearance": mount.get("reference_z_clearance", 5),
-        }
-
     async def _save_session(self, session: dict) -> None:
         await self.database.insert_item(SUITE_NAMESPACE, ["session"], session)
 
     async def _handle_start(self, web_request) -> dict:
         hw_id = web_request.get_str("hardware_profile_id")
         cam_id = web_request.get_str("camera_id")
-        ref = await self._get_camera_ref(cam_id)
+        mode = web_request.get_str("reference_mode", "camera")
+        manual_x = web_request.get_float("manual_x", None)
+        manual_y = web_request.get_float("manual_y", None)
+
+        if mode not in VALID_REFERENCE_MODES:
+            raise self.server.error(f"reference_mode debe ser uno de {VALID_REFERENCE_MODES}", 400)
+
+        hw_profile = self.hardware_store.get(hw_id)
+        if hw_profile is None:
+            raise self.server.error(f"perfil de hardware '{hw_id}' no existe", 404)
+        camera = self.camera_store.get(cam_id)
+        if camera is None:
+            raise self.server.error(f"perfil de camara '{cam_id}' no existe", 404)
+
+        try:
+            ref = compute_reference_point(hw_profile, camera, mode, manual_x, manual_y)
+        except ValueError as exc:
+            raise self.server.error(str(exc), 400)
+
         klippy_apis = self._klippy()
 
         await klippy_apis.run_gcode("G28")
@@ -143,6 +155,7 @@ class IdexCalibration:
             "camera_id": cam_id,
             "active_tool": "T0",
             "reference": ref,
+            "reference_mode": mode,
             "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
         await self._save_session(session)

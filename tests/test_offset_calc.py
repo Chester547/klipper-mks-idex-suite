@@ -49,6 +49,54 @@ class ComputeIdexOffsetTests(unittest.TestCase):
         self.assertEqual(offset, (-0.0, 0.0))
 
 
+class ComputeReferencePointTests(unittest.TestCase):
+    def setUp(self):
+        self.hw = {"bed_size_x": 220, "bed_size_y": 220}
+        self.camera = {"mount": {"reference_x": 111, "reference_y": 105, "reference_z_clearance": 8}}
+
+    def test_camera_mode_uses_camera_profile(self):
+        point = common.compute_reference_point(self.hw, self.camera, "camera", None, None)
+        self.assertEqual(point, {"x": 111, "y": 105, "z_clearance": 8})
+
+    def test_bed_center(self):
+        point = common.compute_reference_point(self.hw, self.camera, "bed_center", None, None)
+        self.assertEqual(point["x"], 110.0)
+        self.assertEqual(point["y"], 110.0)
+
+    def test_bed_front_is_near_y_zero(self):
+        point = common.compute_reference_point(self.hw, self.camera, "bed_front", None, None)
+        self.assertEqual(point["x"], 110.0)
+        self.assertEqual(point["y"], common.BED_EDGE_MARGIN_MM)
+
+    def test_bed_back_is_near_y_max(self):
+        point = common.compute_reference_point(self.hw, self.camera, "bed_back", None, None)
+        self.assertEqual(point["y"], 220 - common.BED_EDGE_MARGIN_MM)
+
+    def test_manual_within_bed_is_accepted(self):
+        point = common.compute_reference_point(self.hw, self.camera, "manual", 50, 60)
+        self.assertEqual(point, {"x": 50, "y": 60, "z_clearance": 8})
+
+    def test_manual_missing_coords_raises(self):
+        with self.assertRaises(ValueError):
+            common.compute_reference_point(self.hw, self.camera, "manual", 50, None)
+
+    def test_manual_out_of_bed_raises(self):
+        with self.assertRaises(ValueError):
+            common.compute_reference_point(self.hw, self.camera, "manual", 500, 60)
+
+    def test_manual_negative_raises(self):
+        with self.assertRaises(ValueError):
+            common.compute_reference_point(self.hw, self.camera, "manual", -5, 60)
+
+    def test_defaults_when_bed_size_missing(self):
+        point = common.compute_reference_point({}, self.camera, "bed_center", None, None)
+        self.assertEqual(point["x"], 117.5)
+
+    def test_invalid_mode_raises(self):
+        with self.assertRaises(ValueError):
+            common.compute_reference_point(self.hw, self.camera, "diagonal", None, None)
+
+
 class SlugifyTests(unittest.TestCase):
     def test_lowercases_and_hyphenates(self):
         self.assertEqual(common.slugify("Mi CoreXY IDEX!"), "mi-corexy-idex")

@@ -47,13 +47,27 @@ require_dir() {
 # 'restart' (solo 'reload' tras un 'nginx -t' exitoso), y cualquier fallo
 # aqui es un warn, no aborta el resto de la instalacion.
 setup_nginx() {
-    if ! command -v nginx >/dev/null 2>&1; then
-        warn "nginx no esta instalado -- el frontend no se podra ver hasta que instales nginx o lo configures a mano."
+    if ! command -v sudo >/dev/null 2>&1; then
+        warn "sin 'sudo' disponible: no puedo instalar/configurar nginx. Hazlo a mano (ver docs/INSTALL.md)."
         return 1
     fi
-    if ! command -v sudo >/dev/null 2>&1; then
-        warn "sin 'sudo' disponible: no puedo escribir la config de nginx. Configurala a mano (ver docs/INSTALL.md)."
-        return 1
+
+    if ! command -v nginx >/dev/null 2>&1; then
+        # Instalaciones minimas de Klipper+Moonraker (sin Mainsail/Fluidd, ej.
+        # una VM de pruebas) pueden no traer nginx -- lo instalamos si hay
+        # apt-get disponible en vez de solo avisar.
+        if command -v apt-get >/dev/null 2>&1; then
+            log "nginx no esta instalado -- instalando via apt-get..."
+            if sudo apt-get update -qq && sudo apt-get install -y -qq nginx; then
+                log "nginx instalado."
+            else
+                warn "fallo 'apt-get install nginx'. Instalalo a mano y vuelve a correr install.sh."
+                return 1
+            fi
+        else
+            warn "nginx no esta instalado y no encontre apt-get -- instalalo a mano segun tu distro y vuelve a correr install.sh."
+            return 1
+        fi
     fi
 
     local conf_path="" enable_path=""
@@ -245,8 +259,10 @@ $(printf '\033[1;32m%s\033[0m' "Instalacion completa.")
 Pagina de inicio (wizard + calibracion IDEX):
   http://<ip-de-tu-pi>:$MKS_SUITE_PORT/
 
-Tip: en Mainsail/Fluidd puedes agregar ese link como acceso externo desde
-Settings -> Interface -> Custom Links.
+Tip: Fluidd no soporta links externos en su barra lateral -- guarda esa
+direccion como favorito en el navegador (o "Agregar a pantalla de inicio" en
+el celular). Si usas Mainsail, si se puede agregar un boton real via un
+navi.json en .theme/ -- ver docs/INSTALL.md.
 
 Si es la primera instalacion, revisa docs/INSTALL.md antes de aplicar un
 perfil de hardware: los pines de placa se generan a partir de referencias de
