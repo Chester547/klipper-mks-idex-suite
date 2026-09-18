@@ -26,7 +26,7 @@
 
 ```bash
 cd ~
-git clone https://github.com/<tu-usuario>/klipper-mks-idex-suite.git
+git clone https://github.com/Chester547/klipper-mks-idex-suite.git
 cd klipper-mks-idex-suite
 ./install.sh
 ```
