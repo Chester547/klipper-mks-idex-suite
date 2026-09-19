@@ -28,7 +28,11 @@
             "mks_robin_nano_v3",
             "mks_monster8_v2",
             "creality_4.2.2",
-            "creality_4.2.7"
+            "creality_4.2.7",
+            "creality_ender3_max",
+            "mks_robin_e3",
+            "mks_rumba32_v1",
+            "mks_sgenl"
           ]
         },
         "mcu": {
@@ -86,7 +90,11 @@
         "type": "object",
         "required": ["model", "interface"],
         "properties": {
-          "model": { "type": "string", "enum": ["tmc2209", "tmc2208", "tmc2130", "none"] },
+          "model": {
+            "type": "string",
+            "enum": ["tmc2209", "tmc2208", "tmc2225", "tmc2130", "a4988", "drv8825", "none"],
+            "description": "a4988/drv8825/none no tienen seccion Klipper propia (standalone): la corriente se ajusta con el potenciometro fisico, no por software."
+          },
           "interface": { "type": "string", "enum": ["uart", "spi", "standalone"] },
           "step_pin": { "type": "string", "description": "Solo para entradas sin pin fijo de placa, ej. dual_carriage o extruder1." },
           "dir_pin": { "type": "string" },
@@ -97,15 +105,21 @@
           "safe_distance": { "type": "number", "default": 40 },
           "uart_pin": { "type": "string" },
           "uart_address": { "type": "integer", "minimum": 0, "maximum": 3 },
-          "cs_pin": { "type": "string" },
+          "cs_pin": { "type": "string", "description": "TMC2130: pin CS (SPI por hardware o software)." },
+          "spi_bus": { "type": "string", "description": "TMC2130 con SPI por hardware, ej. 'spi4' (Monster8)." },
+          "spi_software_miso_pin": { "type": "string", "description": "TMC2130 con SPI por software (ej. SGEN_L, sin bus SPI dedicado)." },
+          "spi_software_mosi_pin": { "type": "string" },
+          "spi_software_sclk_pin": { "type": "string" },
           "run_current": { "type": "number", "minimum": 0, "maximum": 3.0 },
           "hold_current_ratio": { "type": "number", "minimum": 0.1, "maximum": 1.0, "default": 0.5 },
           "sense_resistor": { "type": "number", "default": 0.11 },
           "interpolate": { "type": "boolean", "default": true },
           "stealthchop_threshold": { "type": "integer", "default": 999999 },
           "sensorless_homing": { "type": "boolean", "default": false },
-          "diag_pin": { "type": "string", "description": "Requerido si sensorless_homing es true (pin DIAG del driver)." },
-          "driver_sgthrs": { "type": "integer", "minimum": 0, "maximum": 255, "default": 75 }
+          "diag_pin": { "type": "string", "description": "TMC2209: requerido si sensorless_homing es true." },
+          "driver_sgthrs": { "type": "integer", "minimum": 0, "maximum": 255, "default": 75, "description": "TMC2209: sensibilidad StallGuard (0-255)." },
+          "diag1_pin": { "type": "string", "description": "TMC2130: requerido si sensorless_homing es true (equivalente a diag_pin en TMC2209)." },
+          "driver_sgt": { "type": "integer", "minimum": -64, "maximum": 63, "default": 0, "description": "TMC2130: sensibilidad StallGuard (-64 a 63, distinto rango que TMC2209)." }
         },
         "additionalProperties": false
       },
@@ -130,6 +144,7 @@
             "enum": ["bmg_clone", "orbiter_v2", "lgx_lite", "titan", "creality_sprite", "generic"]
           },
           "nozzle_diameter": { "type": "number", "default": 0.4 },
+          "rotation_distance": { "type": "number", "default": 33.5, "description": "mm de filamento por vuelta completa del extrusor. Depende del extrusor elegido, no de la placa -- calibrar con Rotation_Distance.html." },
           "thermistor_type": { "type": "string", "default": "ATC Semitec 104GT-2" },
           "max_temp": { "type": "integer", "default": 300 },
           "min_temp": { "type": "integer", "default": 0 },

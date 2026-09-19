@@ -1,0 +1,76 @@
+{# Libreria de macros Jinja2 para bloques de driver TMC (2208/2209/2225/2130).
+   A4988/DRV8825/"none" no tienen seccion de Klipper (son standalone: el
+   micropaso/corriente se ajustan con jumpers/potenciometro fisico, Klipper
+   solo ve step/dir/enable) -- por eso quedan afuera del filtro de abajo y
+   block()/endstop_pin() no emiten nada para ellas.
+
+   Uso desde un board .cfg.j2:
+     {% import "drivers/tmc_common.cfg.j2" as tmc %}
+     {{ tmc.block(profile, 'stepper_x') }}
+     {{ tmc.endstop_pin(profile, 'stepper_x', '^PA15') }}
+
+   Nota TMC2225: Klipper no tiene una seccion [tmc2225] propia -- comparte
+   protocolo UART y mapa de registros con el TMC2208, asi que se configura
+   con [tmc2208 <axis>] (verificado contra klipper3d.org/Config_Reference.html).
+   TMC2208/2225 tampoco exponen DIAG para sensorless homing (a diferencia del
+   TMC2209): si sensorless_homing viene marcado en uno de estos, se ignora.
+#}
+
+{% set UART_MODELS = ('tmc2209', 'tmc2208', 'tmc2225') %}
+{% set SECTION_NAME = {'tmc2225': 'tmc2208'} %}
+
+{% macro block(profile, axis) -%}
+{%- set d = profile.drivers.get(axis) -%}
+{%- if d and d.model in UART_MODELS %}
+{%- set section = SECTION_NAME.get(d.model, d.model) %}
+[{{ section }} {{ axis }}]
+{% if d.interface == 'uart' %}
+uart_pin: {{ d.uart_pin }}
+{% if d.uart_address is defined %}
+uart_address: {{ d.uart_address }}
+{% endif %}
+{% elif d.interface == 'spi' %}
+cs_pin: {{ d.cs_pin }}
+{% endif %}
+run_current: {{ d.run_current | default(0.6) }}
+hold_current: {{ ((d.run_current | default(0.6)) * (d.hold_current_ratio | default(0.5))) | round(3) }}
+sense_resistor: {{ d.sense_resistor | default(0.11) }}
+interpolate: {{ 'True' if (d.interpolate | default(true)) else 'False' }}
+{# stealthchop_threshold alto == siempre StealthChop; 0 == siempre SpreadCycle. #}
+stealthchop_threshold: {{ d.stealthchop_threshold | default(999999) }}
+{% if d.model == 'tmc2209' and d.get('sensorless_homing') %}
+diag_pin: {{ d.diag_pin }}
+driver_SGTHRS: {{ d.driver_sgthrs | default(75) }}
+{% endif %}
+{% elif d and d.model == 'tmc2130' %}
+[tmc2130 {{ axis }}]
+{% if d.get('spi_software_miso_pin') %}
+cs_pin: {{ d.cs_pin }}
+spi_software_miso_pin: {{ d.spi_software_miso_pin }}
+spi_software_mosi_pin: {{ d.spi_software_mosi_pin }}
+spi_software_sclk_pin: {{ d.spi_software_sclk_pin }}
+{% else %}
+spi_bus: {{ d.spi_bus | default('spi') }}
+cs_pin: {{ d.cs_pin }}
+{% endif %}
+run_current: {{ d.run_current | default(0.6) }}
+hold_current: {{ ((d.run_current | default(0.6)) * (d.hold_current_ratio | default(0.5))) | round(3) }}
+sense_resistor: {{ d.sense_resistor | default(0.11) }}
+interpolate: {{ 'True' if (d.interpolate | default(true)) else 'False' }}
+stealthchop_threshold: {{ d.stealthchop_threshold | default(999999) }}
+{% if d.get('sensorless_homing') %}
+diag1_pin: {{ d.diag1_pin }}
+driver_SGT: {{ d.driver_sgt | default(0) }}
+{% endif %}
+{% endif -%}
+{%- endmacro %}
+
+{% macro endstop_pin(profile, axis, physical_pin) -%}
+{%- set d = profile.drivers.get(axis, {}) -%}
+{%- set sensorless_capable = d.get('model') in ('tmc2209', 'tmc2130') -%}
+{%- if sensorless_capable and d.get('sensorless_homing') -%}
+{{ SECTION_NAME.get(d.model, d.model) }}_{{ axis }}:virtual_endstop
+{%- else -%}
+{{ physical_pin }}
+{%- endif -%}
+{%- endmacro %}

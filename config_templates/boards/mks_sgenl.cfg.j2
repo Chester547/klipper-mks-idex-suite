@@ -1,0 +1,92 @@
+{% include "_safety_banner.j2" %}
+{% import "drivers/tmc_common.cfg.j2" as tmc %}
+# Confianza de pinout: ALTA (verificado contra
+# klipper/config/generic-mks-sgenl.cfg). MCU: LPC1768 (naming de pines
+# "P#.#", distinto al "PA/PB/PC" de las placas STM32 de esta suite -- es
+# normal, no es un error).
+#
+# Esta placa soporta TMC2208 (UART) o TMC2130 (SPI por software, sin bus SPI
+# dedicado): si elegis TMC2130 aca, spi_software_miso_pin/mosi_pin/sclk_pin
+# son los MISMOS 3 pines (P0.5 / P4.28 / P0.4) para los 5 ejes -- repetilos
+# igual en cada eje del asistente, es como esta armada la placa fisicamente.
+# El DIAG de cada eje (para sensorless homing con TMC2130) comparte el mismo
+# pin fisico que su endstop mecanico -- confirmado tambien en la foto de
+# placa que me pasaste (jumpers "XDIAG"/"YDIAG" junto al header de endstop).
+
+[mcu]
+serial: {{ profile.board.mcu }}
+baud: {{ profile.board.baud | default(250000) }}
+restart_method: command
+
+[stepper_x]
+step_pin: P2.2
+dir_pin: !P2.3
+enable_pin: !P2.1
+microsteps: 16
+rotation_distance: 40
+endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_x', '^P1.29') }}
+position_endstop: 0
+position_max: {{ profile.bed_size_x | default(320) }}
+homing_speed: 50
+{{ tmc.block(profile, 'stepper_x') }}
+
+[stepper_y]
+step_pin: P0.19
+dir_pin: !P0.20
+enable_pin: !P2.8
+microsteps: 16
+rotation_distance: 40
+endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_y', '^P1.27') }}
+position_endstop: 0
+position_max: {{ profile.bed_size_y | default(300) }}
+homing_speed: 50
+{{ tmc.block(profile, 'stepper_y') }}
+
+[stepper_z]
+step_pin: P0.22
+dir_pin: P2.11
+enable_pin: !P0.21
+microsteps: 16
+rotation_distance: 8
+{% if profile.probe.type is defined and profile.probe.type != 'none' %}
+endstop_pin: probe:z_virtual_endstop
+{% else %}
+endstop_pin: ^P1.25
+position_endstop: 0.5
+{% endif %}
+position_max: 400
+{{ tmc.block(profile, 'stepper_z') }}
+
+[extruder]
+step_pin: P2.13
+dir_pin: !P0.11
+enable_pin: !P2.12
+microsteps: 16
+rotation_distance: {{ profile.toolheads[0].rotation_distance | default(33.5) }}
+nozzle_diameter: {{ profile.toolheads[0].nozzle_diameter | default(0.4) }}
+filament_diameter: 1.75
+heater_pin: P2.7
+sensor_type: {{ profile.toolheads[0].thermistor_type | default('EPCOS 100K B57560G104F') }}
+sensor_pin: P0.23
+control: pid
+pid_Kp: 22.2
+pid_Ki: 1.08
+pid_Kd: 114
+min_temp: {{ profile.toolheads[0].min_temp | default(0) }}
+max_temp: {{ profile.toolheads[0].max_temp | default(260) }}
+max_extrude_only_distance: 100.0
+{{ tmc.block(profile, 'extruder') }}
+
+[heater_bed]
+heater_pin: P2.5
+sensor_type: ATC Semitec 104GT-2
+sensor_pin: P0.24
+control: pid
+pid_Kp: 54.027
+pid_Ki: 0.770
+pid_Kd: 948.182
+min_temp: 0
+max_temp: 130
+
+[fan]
+pin: P2.4

@@ -1,4 +1,4 @@
-{% import "drivers/tmc2209.cfg.j2" as tmc %}
+{% import "drivers/tmc_common.cfg.j2" as tmc %}
 # IDEX: cinematica base cartesiana + segundo carro X independiente
 # (dual_carriage). Los pines de dual_carriage/extruder1 NO vienen de la
 # plantilla de placa (son de tu modificacion fisica): se toman del perfil que
@@ -45,7 +45,7 @@ step_pin: {{ d1.step_pin }}
 dir_pin: {{ d1.dir_pin }}
 enable_pin: {{ d1.enable_pin }}
 microsteps: 16
-rotation_distance: 33.500
+rotation_distance: {{ t1.rotation_distance | default(33.5) }}
 nozzle_diameter: {{ t1.nozzle_diameter | default(0.4) }}
 filament_diameter: 1.75
 heater_pin: {{ t1.heater_pin }}

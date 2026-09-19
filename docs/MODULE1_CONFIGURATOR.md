@@ -6,7 +6,7 @@ Asistente paso a paso (estilo RatOS) que genera un set de `.cfg` de Klipper a pa
 
 1. **Placa base**: elegis el MCU principal (ver tabla de placas soportadas en [INSTALL.md](INSTALL.md)) y el puerto serie.
 2. **Cinematica**: Cartesiana, CoreXY o IDEX. IDEX agrega un segundo carro X (`T1`) en los pasos siguientes.
-3. **Drivers**: por cada eje (`stepper_x/y/z`, `extruder`, y `dual_carriage`/`extruder1` si es IDEX) elegis modelo TMC, interfaz (UART/SPI/standalone), corriente, y opcionalmente sensorless homing (pin DIAG + sensibilidad SGTHRS).
+3. **Drivers**: por cada eje (`stepper_x/y/z`, `extruder`, y `dual_carriage`/`extruder1` si es IDEX) elegis modelo (TMC2209, TMC2208, TMC2225, TMC2130, A4988 o DRV8825), interfaz (UART/SPI por hardware o software/standalone), corriente, un toggle de StealthChop/SpreadCycle, y sensorless homing donde aplica (TMC2209 con DIAG+SGTHRS, TMC2130 con DIAG1+SGT). El wizard oculta los campos que no aplican al modelo elegido (A4988/DRV8825 no tienen ningun campo de software, por ejemplo). Si la placa elegida tiene pines TMC confirmados contra el archivo oficial de Klipper, aparece un boton "Sugerir pines para esta placa".
 4. **Hotends/Extrusores**: hotend + extrusor de una lista predeterminada, diametro de boquilla, termistor, temperaturas limite. En IDEX, `T1` ademas pide `heater_pin`/`sensor_pin` (el zocalo de E1 que reutilizaste fisicamente).
 5. **Perifericos**: BLTouch/sonda inductiva con offsets X/Y/Z, sensor de filamento, tiras LED WS2812B (con soporte opcional para el plugin `led_effect`).
 6. **MCUs secundarias (experimental)**: Arduino Mega2560 / STM32 generica / ESP32 adicionales.
@@ -20,8 +20,8 @@ Todo el estado se guarda como un `HardwareProfile` JSON (ver [`schema/hardware_p
 
 ```
 config_templates/
-├── boards/<placa>.cfg.j2         # [mcu], steppers, extruder T0, heater_bed, fan
-├── drivers/tmc2209.cfg.j2        # macros Jinja2 reusables para bloques [tmc2209 <eje>]
+├── boards/<placa>.cfg.j2         # [mcu], steppers, extruder T0, heater_bed, fan (10 placas)
+├── drivers/tmc_common.cfg.j2     # macros Jinja2 reusables para [tmc2208/2209/2130 <eje>]
 ├── kinematics/{cartesian,corexy,idex}.cfg.j2   # [printer] + (si es IDEX) dual_carriage/extruder1
 ├── peripherals/{bltouch,filament_sensor,led_effect}.cfg.j2
 ├── mcu_secondary/{arduino_mega2560,stm32_generic,esp32}.cfg.j2
@@ -41,7 +41,9 @@ Al pedir "Render" o "Aplicar", `render_templates()` (en [`mks_suite_common.py`](
 
 ## Placas: que esta verificado y que no
 
-Los pines de motores/heaters/fan de las 6 placas soportadas se contrastaron contra los archivos oficiales de `klipper/config/` (ver tabla en [INSTALL.md](INSTALL.md)). Los pines de UART de TMC2209, de sondas, sensores de filamento y LEDs son sugerencias editables (`catalog/options.json -> suggested_peripheral_pins`) que **siempre** podes sobreescribir en el asistente -- nunca se usan directo en las plantillas sin pasar por tu confirmacion.
+Los pines de motores/heaters/fan de las 10 placas soportadas se contrastaron contra los archivos oficiales de `klipper/config/` (ver tabla en [INSTALL.md](INSTALL.md)). Los pines de UART/SPI de los drivers TMC, de sondas, sensores de filamento y LEDs son sugerencias editables (`catalog/options.json -> suggested_peripheral_pins` / `suggested_driver_uart_pins` / `suggested_extruder1_pins`) que **siempre** podes sobreescribir en el asistente -- nunca se usan directo en las plantillas sin pasar por tu confirmacion (el boton "Sugerir pines" solo precarga el campo, no aplica nada por si solo).
+
+Distincion importante para IDEX: el zocalo "E1" de repuesto en placas de 4 drivers (Robin Nano, Robin E3) sirve para un **segundo extrusor sobre el mismo carro** (`[extruder1]` sin `[dual_carriage]`), no para IDEX de carro independiente -- para eso hace falta una placa con un zocalo de motor de sobra ademas del de extrusor (Monster8 con 8, RUMBA32 con 6).
 
 ## Sincronizacion con GitHub
 

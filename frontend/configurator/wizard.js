@@ -118,9 +118,73 @@ function handleAction(action, arg) {
     state.activeToolheadTab = arg;
   } else if (action === "select-render-file") {
     state.activeRenderFile = arg;
+  } else if (action === "toggle-stealthchop") {
+    const d = ensureDriver(arg);
+    const isOn = (d.stealthchop_threshold ?? 999999) > 0;
+    d.stealthchop_threshold = isOn ? 0 : 999999;
+  } else if (action === "toggle-tmc2130-spi-mode") {
+    const d = ensureDriver(arg);
+    if (d.spi_software_miso_pin !== undefined) {
+      delete d.spi_software_miso_pin;
+      delete d.spi_software_mosi_pin;
+      delete d.spi_software_sclk_pin;
+    } else {
+      d.spi_software_miso_pin = "";
+      d.spi_software_mosi_pin = "";
+      d.spi_software_sclk_pin = "";
+    }
+  } else if (action === "apply-suggested-driver-pins") {
+    applySuggestedDriverPins(arg);
+  } else if (action === "apply-suggested-extruder1-pins") {
+    applySuggestedExtruder1Pins();
   }
   markDirty();
   renderStep();
+}
+
+function applySuggestedDriverPins(axis) {
+  const boardId = state.profile.board.id;
+  const suggestions = (state.catalog.suggested_driver_uart_pins || {})[boardId];
+  if (!suggestions) { toast("Sin pines sugeridos para esta placa.", true); return; }
+  const d = ensureDriver(axis);
+  if (d.model === "tmc2130") {
+    const spiSuggestions = suggestions.tmc2130 || {};
+    const perAxis = spiSuggestions[axis];
+    if (!perAxis) { toast(`Sin sugerencia TMC2130 para ${axis} en esta placa.`, true); return; }
+    d.cs_pin = perAxis.cs_pin;
+    if (perAxis.diag1_pin) d.diag1_pin = perAxis.diag1_pin;
+    if (suggestions.tmc2130_software_spi) {
+      Object.assign(d, {
+        spi_software_miso_pin: suggestions.tmc2130_software_spi.miso_pin,
+        spi_software_mosi_pin: suggestions.tmc2130_software_spi.mosi_pin,
+        spi_software_sclk_pin: suggestions.tmc2130_software_spi.sclk_pin,
+      });
+    } else if (suggestions.tmc2130_spi_bus) {
+      d.spi_bus = suggestions.tmc2130_spi_bus;
+    }
+  } else {
+    const uartByModel = suggestions[d.model] || suggestions.tmc2208 || suggestions.tmc2209;
+    const pin = uartByModel && uartByModel[axis];
+    if (!pin) { toast(`Sin sugerencia UART para ${axis} en esta placa.`, true); return; }
+    d.uart_pin = pin;
+  }
+  toast(`Pines sugeridos aplicados a ${axis} -- revisalos antes de aplicar.`);
+}
+
+function applySuggestedExtruder1Pins() {
+  const boardId = state.profile.board.id;
+  const suggestion = (state.catalog.suggested_extruder1_pins || {})[boardId];
+  if (!suggestion) { toast("Sin sugerencia de zocalo E1 para esta placa.", true); return; }
+  const d = ensureDriver("extruder1");
+  d.step_pin = suggestion.step_pin;
+  d.dir_pin = suggestion.dir_pin;
+  d.enable_pin = suggestion.enable_pin;
+  const t1 = state.profile.toolheads.find((t) => t.id === "T1");
+  if (t1) {
+    t1.heater_pin = suggestion.heater_pin;
+    t1.sensor_pin = suggestion.sensor_pin;
+  }
+  toast("Pines de E1 sugeridos aplicados -- confirma que tu modificacion fisica realmente use ese zocalo.");
 }
 
 function ensureDriver(axis) {
@@ -187,54 +251,119 @@ function renderStepKinematics() {
     </div>`;
 }
 
+const STANDALONE_DRIVER_MODELS = ["a4988", "drv8825", "none"];
+const UART_FAMILY_DRIVER_MODELS = ["tmc2209", "tmc2208", "tmc2225"];
+
+function normalizeDriverInterface(d) {
+  // TMC2130 en Klipper es SPI-only; A4988/DRV8825/none no tienen seccion de
+  // Klipper (standalone). Corregimos la interfaz sola si quedo inconsistente
+  // tras cambiar el modelo, para no dejar un perfil invalido silenciosamente.
+  if (d.model === "tmc2130") d.interface = "spi";
+  else if (STANDALONE_DRIVER_MODELS.includes(d.model)) d.interface = "standalone";
+  else if (d.interface === "spi" && UART_FAMILY_DRIVER_MODELS.includes(d.model)) d.interface = "uart";
+}
+
 function driverCardHtml(axis) {
   const d = ensureDriver(axis);
+  normalizeDriverInterface(d);
   const isExtra = axis === "dual_carriage" || axis === "extruder1";
+  const isStandalone = STANDALONE_DRIVER_MODELS.includes(d.model);
+  const isUartFamily = UART_FAMILY_DRIVER_MODELS.includes(d.model);
+  const isTmc2130 = d.model === "tmc2130";
+  const isSoftSpi = isTmc2130 && d.spi_software_miso_pin !== undefined;
+  const stealthOn = (d.stealthchop_threshold ?? 999999) > 0;
+
+  let fields = `
+    <div class="mks-field">
+      <label>Driver</label>
+      <select data-bind="drivers.${axis}.model" data-rerender="1">${optionsHtml(state.catalog.driver_models, d.model)}</select>
+    </div>`;
+
+  if (isStandalone) {
+    fields += `
+    <div class="mks-field" style="grid-column: span 2;">
+      <p class="hint" style="margin:8px 0 0;">Sin control por software: la corriente se ajusta con el potenciometro fisico de la placa. Klipper solo necesita step/dir/enable (fijos por la placa).</p>
+    </div>`;
+  } else {
+    fields += `
+    <div class="mks-field">
+      <label>Interfaz</label>
+      <select data-bind="drivers.${axis}.interface" data-rerender="1">
+        ${isTmc2130 ? `<option value="spi" selected>SPI</option>` : `
+        <option value="uart" ${d.interface === "uart" ? "selected" : ""}>UART</option>
+        <option value="spi" ${d.interface === "spi" ? "selected" : ""}>SPI</option>`}
+      </select>
+    </div>
+    <div class="mks-field">
+      <label>Corriente (A)</label>
+      <input type="number" step="0.05" data-bind="drivers.${axis}.run_current" data-number="1" />
+    </div>`;
+
+    if (isUartFamily && d.interface === "uart") {
+      fields += `<div class="mks-field"><label>UART pin</label><input type="text" data-bind="drivers.${axis}.uart_pin" placeholder="ej. PD5" /></div>`;
+    } else if (isUartFamily && d.interface === "spi") {
+      fields += `<div class="mks-field"><label>CS pin</label><input type="text" data-bind="drivers.${axis}.cs_pin" /></div>`;
+    }
+
+    if (isTmc2130) {
+      fields += `
+      <div class="mks-field"><label>CS pin</label><input type="text" data-bind="drivers.${axis}.cs_pin" /></div>
+      <div class="mks-field">
+        <label class="mks-checkbox" style="margin-top:22px;">
+          <input type="checkbox" data-action="toggle-tmc2130-spi-mode" data-arg="${axis}" ${isSoftSpi ? "checked" : ""} /> SPI por software (sin bus dedicado)
+        </label>
+      </div>`;
+      if (isSoftSpi) {
+        fields += `
+      <div class="mks-field"><label>MISO</label><input type="text" data-bind="drivers.${axis}.spi_software_miso_pin" /></div>
+      <div class="mks-field"><label>MOSI</label><input type="text" data-bind="drivers.${axis}.spi_software_mosi_pin" /></div>
+      <div class="mks-field"><label>SCLK</label><input type="text" data-bind="drivers.${axis}.spi_software_sclk_pin" /></div>`;
+      } else {
+        fields += `<div class="mks-field"><label>SPI bus</label><input type="text" data-bind="drivers.${axis}.spi_bus" placeholder="ej. spi4" /></div>`;
+      }
+    }
+
+    const boardSuggestions = (state.catalog.suggested_driver_uart_pins || {})[state.profile.board.id];
+    const hasSuggestion = boardSuggestions && (isTmc2130 ? !!(boardSuggestions.tmc2130 || {})[axis] : !!(boardSuggestions[d.model] || {})[axis]);
+    if (hasSuggestion) {
+      fields += `
+    <div class="mks-field" style="grid-column: span 3;">
+      <button type="button" class="mks-btn ghost" data-action="apply-suggested-driver-pins" data-arg="${axis}">&#8635; Sugerir pines para esta placa</button>
+    </div>`;
+    }
+
+    fields += `
+    <div class="mks-field">
+      <label class="mks-checkbox" style="margin-top:22px;">
+        <input type="checkbox" data-action="toggle-stealthchop" data-arg="${axis}" ${stealthOn ? "checked" : ""} /> StealthChop (silencioso)
+      </label>
+    </div>`;
+
+    if (d.model === "tmc2209" || isTmc2130) {
+      fields += `
+    <div class="mks-field">
+      <label class="mks-checkbox" style="margin-top:22px;">
+        <input type="checkbox" data-bind="drivers.${axis}.sensorless_homing" data-rerender="1" /> Sensorless homing
+      </label>
+    </div>`;
+      if (d.sensorless_homing && d.model === "tmc2209") {
+        fields += `
+    <div class="mks-field"><label>DIAG pin</label><input type="text" data-bind="drivers.${axis}.diag_pin" placeholder="ej. ^PA15" /></div>
+    <div class="mks-field"><label>SGTHRS (0-255)</label><input type="number" data-bind="drivers.${axis}.driver_sgthrs" data-number="1" data-default="75" /></div>`;
+      } else if (d.sensorless_homing && isTmc2130) {
+        fields += `
+    <div class="mks-field"><label>DIAG1 pin</label><input type="text" data-bind="drivers.${axis}.diag1_pin" placeholder="ej. ^!PA14" /></div>
+    <div class="mks-field"><label>SGT (-64 a 63)</label><input type="number" data-bind="drivers.${axis}.driver_sgt" data-number="1" data-default="0" /></div>`;
+      }
+    }
+  }
+
   return `
     <div class="mks-card">
       <h3>${esc(axis)}</h3>
-      <div class="mks-grid cols-3">
-        <div class="mks-field">
-          <label>Driver</label>
-          <select data-bind="drivers.${axis}.model" data-rerender="1">${optionsHtml(state.catalog.driver_models, d.model)}</select>
-        </div>
-        <div class="mks-field">
-          <label>Interfaz</label>
-          <select data-bind="drivers.${axis}.interface">
-            <option value="uart" ${d.interface === "uart" ? "selected" : ""}>UART</option>
-            <option value="spi" ${d.interface === "spi" ? "selected" : ""}>SPI</option>
-            <option value="standalone" ${d.interface === "standalone" ? "selected" : ""}>Standalone</option>
-          </select>
-        </div>
-        <div class="mks-field">
-          <label>Corriente (A)</label>
-          <input type="number" step="0.05" data-bind="drivers.${axis}.run_current" data-number="1" />
-        </div>
-        <div class="mks-field">
-          <label>UART pin</label>
-          <input type="text" data-bind="drivers.${axis}.uart_pin" placeholder="ej. PD5" />
-        </div>
-        <div class="mks-field">
-          <label>CS pin (SPI)</label>
-          <input type="text" data-bind="drivers.${axis}.cs_pin" />
-        </div>
-        <div class="mks-field">
-          <label class="mks-checkbox" style="margin-top:22px;">
-            <input type="checkbox" data-bind="drivers.${axis}.sensorless_homing" data-rerender="1" /> Sensorless homing
-          </label>
-        </div>
-        ${d.sensorless_homing ? `
-        <div class="mks-field">
-          <label>DIAG pin</label>
-          <input type="text" data-bind="drivers.${axis}.diag_pin" placeholder="ej. ^PA15" />
-        </div>
-        <div class="mks-field">
-          <label>SGTHRS (sensibilidad)</label>
-          <input type="number" data-bind="drivers.${axis}.driver_sgthrs" data-number="1" data-default="75" />
-        </div>` : ""}
-      </div>
+      <div class="mks-grid cols-3">${fields}</div>
       ${isExtra ? `
-      <p class="hint" style="margin-top:14px;">Pines fisicos de tu modificacion (no vienen de la plantilla de placa):</p>
+      <p class="hint" style="margin-top:14px;">Pines fisicos de tu modificacion (no vienen de la plantilla de placa)${axis === "extruder1" && (state.catalog.suggested_extruder1_pins || {})[state.profile.board.id] ? ` -- <button type="button" class="mks-btn ghost" style="padding:2px 8px;" data-action="apply-suggested-extruder1-pins">sugerir zocalo E1 de esta placa</button>` : ""}:</p>
       <div class="mks-grid cols-3">
         <div class="mks-field"><label>step_pin</label><input type="text" data-bind="drivers.${axis}.step_pin" /></div>
         <div class="mks-field"><label>dir_pin</label><input type="text" data-bind="drivers.${axis}.dir_pin" /></div>

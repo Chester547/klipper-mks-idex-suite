@@ -1,5 +1,5 @@
 {% include "_safety_banner.j2" %}
-{% import "drivers/tmc2209.cfg.j2" as tmc %}
+{% import "drivers/tmc_common.cfg.j2" as tmc %}
 # Confianza de pinout: ALTA para motores/heaters/fan (verificado contra
 # klipper/config/generic-mks-robin-nano-v2.cfg). Confianza MEDIA para los
 # uart_pin de TMC2209 (ese archivo mainline no asume driver; uart_pin viene de
@@ -19,7 +19,7 @@ microsteps: 16
 rotation_distance: 40
 endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_x', 'PA15') }}
 position_endstop: 0
-position_max: 235
+position_max: {{ profile.bed_size_x | default(235) }}
 homing_speed: 50
 {{ tmc.block(profile, 'stepper_x') }}
 {% if profile.drivers.get('stepper_x', {}).interface == 'uart' %}
@@ -34,7 +34,7 @@ microsteps: 16
 rotation_distance: 40
 endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_y', '!PA12') }}
 position_endstop: 0
-position_max: 235
+position_max: {{ profile.bed_size_y | default(235) }}
 homing_speed: 50
 {{ tmc.block(profile, 'stepper_y') }}
 
@@ -59,7 +59,7 @@ step_pin: PD6
 dir_pin: !PD3
 enable_pin: !PB3
 microsteps: 16
-rotation_distance: 33.500
+rotation_distance: {{ profile.toolheads[0].rotation_distance | default(33.5) }}
 nozzle_diameter: {{ profile.toolheads[0].nozzle_diameter | default(0.4) }}
 filament_diameter: 1.75
 heater_pin: PC3

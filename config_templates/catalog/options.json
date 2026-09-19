@@ -5,7 +5,11 @@
     { "id": "mks_robin_nano_v3", "label": "MKS Robin Nano V3", "mcu_family": "STM32F407" },
     { "id": "mks_monster8_v2", "label": "MKS Monster8 V2", "mcu_family": "STM32F407" },
     { "id": "creality_4.2.2", "label": "Creality v4.2.2", "mcu_family": "STM32F103" },
-    { "id": "creality_4.2.7", "label": "Creality v4.2.7", "mcu_family": "STM32F103" }
+    { "id": "creality_4.2.7", "label": "Creality v4.2.7", "mcu_family": "STM32F103" },
+    { "id": "creality_ender3_max", "label": "Creality Ender 3 MAX (stock 2020/2021)", "mcu_family": "STM32F103" },
+    { "id": "mks_robin_e3", "label": "MKS Robin E3 (V1.1)", "mcu_family": "STM32F103" },
+    { "id": "mks_rumba32_v1", "label": "MKS RUMBA32 V1.0", "mcu_family": "STM32F446" },
+    { "id": "mks_sgenl", "label": "MKS SGEN_L V1.0", "mcu_family": "LPC1768" }
   ],
   "kinematics": [
     { "id": "cartesian", "label": "Cartesiana" },
@@ -15,7 +19,10 @@
   "driver_models": [
     { "id": "tmc2209", "label": "TMC2209", "interfaces": ["uart", "standalone"] },
     { "id": "tmc2208", "label": "TMC2208", "interfaces": ["uart", "standalone"] },
+    { "id": "tmc2225", "label": "TMC2225 (usa config de TMC2208)", "interfaces": ["uart", "standalone"] },
     { "id": "tmc2130", "label": "TMC2130", "interfaces": ["spi"] },
+    { "id": "a4988", "label": "A4988 (standalone, sin control por software)", "interfaces": ["standalone"] },
+    { "id": "drv8825", "label": "DRV8825 (standalone, sin control por software)", "interfaces": ["standalone"] },
     { "id": "none", "label": "Driver externo / no gestionado por Klipper", "interfaces": ["standalone"] }
   ],
   "hotends": [
@@ -52,12 +59,50 @@
     { "id": "sport", "label": "Deportivo", "description": "SpreadCycle forzado, aceleraciones al maximo configurado." }
   ],
   "suggested_peripheral_pins": {
-    "_comment": "Sugerencias de comunidad para precargar el formulario -- SIEMPRE editables, no se usan directo en las plantillas .cfg.j2.",
+    "_comment": "Sugerencias para precargar el formulario -- SIEMPRE editables, no se usan directo en las plantillas .cfg.j2. 'creality_ender3_max' viene del propio archivo oficial de Klipper (BLTouch/filament sensor ya cableados de fabrica, solo deshabilitados); el resto son sugerencias de comunidad.",
     "mks_robin_nano_v1.2": { "probe_pin": "PA1", "probe_servo_pin": "PA2", "filament_sensor_pin": "PA4" },
     "mks_robin_nano_v2": { "probe_pin": "PA1", "probe_servo_pin": "PA2", "filament_sensor_pin": "PA4" },
     "mks_robin_nano_v3": { "probe_pin": "PA1", "probe_servo_pin": "PA2", "filament_sensor_pin": "PA4" },
     "mks_monster8_v2": { "probe_pin": "PC4", "probe_servo_pin": "PC5", "filament_sensor_pin": "PC6" },
     "creality_4.2.2": { "probe_pin": "PB0", "probe_servo_pin": "PB1", "filament_sensor_pin": "PA4" },
-    "creality_4.2.7": { "probe_pin": "PB0", "probe_servo_pin": "PB1", "filament_sensor_pin": "PA4" }
+    "creality_4.2.7": { "probe_pin": "PB0", "probe_servo_pin": "PB1", "filament_sensor_pin": "PA4" },
+    "creality_ender3_max": { "probe_pin": "PB1", "probe_servo_pin": "PB0", "filament_sensor_pin": "PA4" },
+    "mks_robin_e3": { "probe_pin": "PC6", "probe_servo_pin": "PA3", "filament_sensor_pin": "PB10" }
+  },
+  "suggested_driver_uart_pins": {
+    "_comment": "uart_pin/cs_pin por eje, confirmados contra el .cfg oficial de cada placa (bloques TMC comentados en el archivo mainline). Siempre editables.",
+    "mks_monster8_v2": {
+      "tmc2208": { "stepper_x": "PE6", "stepper_y": "PE3", "stepper_z": "PB7", "extruder": "PB3" },
+      "tmc2130_spi_bus": "spi4",
+      "tmc2130": {
+        "stepper_x": { "cs_pin": "PE6", "diag1_pin": "PA14" },
+        "stepper_y": { "cs_pin": "PE3", "diag1_pin": "PA15" },
+        "stepper_z": { "cs_pin": "PB7", "diag1_pin": "PB13" },
+        "extruder": { "cs_pin": "PB3", "diag1_pin": "PA13" }
+      }
+    },
+    "mks_robin_e3": {
+      "tmc2209": { "stepper_x": "PC7", "stepper_y": "PD2", "stepper_z": "PC12", "extruder": "PC11" }
+    },
+    "mks_rumba32_v1": {
+      "tmc2209": { "stepper_x": "PC14", "stepper_y": "PE4", "stepper_z": "PE0", "extruder": "PC13" }
+    },
+    "mks_sgenl": {
+      "tmc2208": { "stepper_x": "P1.1", "stepper_y": "P1.8", "stepper_z": "P1.10", "extruder": "P1.15" },
+      "tmc2130_software_spi": { "miso_pin": "P0.5", "mosi_pin": "P4.28", "sclk_pin": "P0.4" },
+      "tmc2130": {
+        "stepper_x": { "cs_pin": "P1.1", "diag1_pin": "P1.29" },
+        "stepper_y": { "cs_pin": "P1.8", "diag1_pin": "P1.27" },
+        "stepper_z": { "cs_pin": "P1.10", "diag1_pin": "P1.25" },
+        "extruder": { "cs_pin": "P1.15" }
+      }
+    }
+  },
+  "suggested_extruder1_pins": {
+    "_comment": "Zocalo 'E1' de repuesto para un segundo extrusor (NO es lo mismo que dual_carriage/IDEX independiente -- ver docs/MODULE1_CONFIGURATOR.md). Confirmado contra el .cfg oficial de cada placa; RUMBA32 tiene zocalos E1/E2 libres pero el archivo oficial no da pines para ellos, asi que no hay sugerencia.",
+    "mks_robin_nano_v1.2": { "step_pin": "PA6", "dir_pin": "!PA1", "enable_pin": "!PA3", "heater_pin": "PB0", "sensor_pin": "PC2" },
+    "mks_robin_nano_v2": { "step_pin": "PD15", "dir_pin": "!PA1", "enable_pin": "!PA3", "heater_pin": "PB0", "sensor_pin": "PC2" },
+    "mks_robin_nano_v3": { "step_pin": "PD15", "dir_pin": "!PA1", "enable_pin": "!PA3", "heater_pin": "PB0", "sensor_pin": "PA2" },
+    "mks_monster8_v2": { "step_pin": "PD6", "dir_pin": "!PD5", "enable_pin": "!PD7", "heater_pin": "PB0", "sensor_pin": "PC2" }
   }
 }

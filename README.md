@@ -13,7 +13,7 @@
 
 | | |
 |---|---|
-| **1. Configurador** | Asistente paso a paso (estilo RatOS) que genera `printer.cfg` para MKS Robin Nano (v1.2 / V2 / V3), MKS Monster8 V2 y Creality v4.2.2 / v4.2.7 -- cinematica cartesiana/CoreXY/IDEX, drivers TMC2209 (UART/SPI, sensorless homing, StealthChop/SpreadCycle), BLTouch, sensor de filamento, LEDs WS2812B y MCUs secundarias experimentales. |
+| **1. Configurador** | Asistente paso a paso (estilo RatOS) que genera `printer.cfg` para 10 placas MKS/Creality -- cinematica cartesiana/CoreXY/IDEX, drivers TMC2209/2208/2225/2130 (UART/SPI por hardware o software, sensorless homing, toggle StealthChop/SpreadCycle) y A4988/DRV8825 (standalone), BLTouch, sensor de filamento, LEDs WS2812B y MCUs secundarias experimentales. Con placas donde el archivo oficial de Klipper trae pines TMC confirmados, el wizard los sugiere con un click. |
 | **2. Calibracion IDEX** | Vista de camara con ret&#237;cula superpuesta, conmutador T0/T1, zoom digital 1x/2x/4x y pad direccional de micro-pasos (0.05 / 0.1 / 0.5 / 1 mm) para alinear visualmente ambas boquillas y persistir el offset sin `SAVE_CONFIG`. Incluye 3 perfiles de rendimiento (Silencioso/Balanceado/Deportivo) que se autoadaptan a los steppers realmente configurados. |
 | **3. Instalador** | `git clone && ./install.sh`: symlinkea los componentes Python en Moonraker, agrega la config necesaria (con backup automatico) e integra `[update_manager]` para actualizar con un click desde Mainsail/Fluidd. |
 
@@ -72,8 +72,8 @@ klipper-mks-idex-suite/
 │
 ├── config_templates/                # fuente de verdad de TODOS los .cfg generados
 │   ├── catalog/options.json         # listas desplegables + pines sugeridos (editables)
-│   ├── boards/*.cfg.j2              # 6 placas, pines verificados contra klipper/config/
-│   ├── drivers/tmc2209.cfg.j2       # macros Jinja2 [tmc2209 <eje>] + endstop sensorless
+│   ├── boards/*.cfg.j2              # 10 placas, pines verificados contra klipper/config/
+│   ├── drivers/tmc_common.cfg.j2    # macros Jinja2 TMC2208/2209/2225/2130 + endstop sensorless
 │   ├── kinematics/{cartesian,corexy,idex}.cfg.j2
 │   ├── peripherals/{bltouch,filament_sensor,led_effect}.cfg.j2
 │   ├── mcu_secondary/{arduino_mega2560,stm32_generic,esp32}.cfg.j2
@@ -109,7 +109,9 @@ klipper-mks-idex-suite/
 
 ## Placas soportadas
 
-MKS Robin Nano v1.2 &#183; MKS Robin Nano V2 &#183; MKS Robin Nano V3 &#183; MKS Monster8 V2 &#183; Creality v4.2.2 &#183; Creality v4.2.7 -- ver [confianza de pinout por placa](docs/INSTALL.md#confianza-de-pinout-por-placa) antes de la primera puesta en marcha.
+MKS Robin Nano v1.2 &#183; MKS Robin Nano V2 &#183; MKS Robin Nano V3 &#183; MKS Robin E3 (V1.1) &#183; MKS Monster8 V2 &#183; MKS RUMBA32 V1.0 &#183; MKS SGEN_L V1.0 &#183; Creality v4.2.2 &#183; Creality v4.2.7 &#183; Creality Ender 3 MAX -- ver [confianza de pinout por placa](docs/INSTALL.md#confianza-de-pinout-por-placa) antes de la primera puesta en marcha.
+
+Drivers: TMC2209, TMC2208, TMC2225, TMC2130 (SPI hardware o software), A4988, DRV8825.
 
 ## Integracion con Moonraker Update Manager
 

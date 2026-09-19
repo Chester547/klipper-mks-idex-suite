@@ -101,8 +101,16 @@ Los `.cfg` que genera el Modulo 1 usan pines de motores/heaters/fan **verificado
 | MKS Monster8 V2 | Alta (archivo generico, no distingue V1/V2) | `klipper/config/generic-mks-monster8.cfg` |
 | Creality v4.2.2 | Alta | `klipper/config/printer-creality-ender3pro-2020.cfg` (identificado como revision 4.2.2) |
 | Creality v4.2.7 | Alta | `klipper/config/generic-creality-v4.2.7.cfg` |
+| Creality Ender 3 MAX (stock) | Alta -- incluye BLTouch y sensor de filamento ya cableados de fabrica (deshabilitados) | `klipper/config/printer-creality-ender3max-2021.cfg` |
+| MKS Robin E3 (V1.1) | Alta para motores/extruder/UART TMC2209 (viene con TMC2209 de fabrica). **Media-baja para `heater_bed`**: el propio archivo oficial de Klipper lo deja comentado/incompleto -- verifica con multimetro antes de conectar la cama | `klipper/config/generic-mks-robin-e3.cfg` |
+| MKS RUMBA32 V1.0 | Alta para X/Y/Z/extruder. Zocalos E1/E2 libres para IDEX pero sin pines confirmados en el archivo oficial | `klipper/config/generic-mks-rumba32-v1.0.cfg` |
+| MKS SGEN_L V1.0 | Alta (MCU LPC1768, naming de pines "P#.#" en vez de "PA/PB/PC") | `klipper/config/generic-mks-sgenl.cfg` |
 
-En todos los casos, los `uart_pin` de TMC2209 **no** vienen de esos archivos oficiales (son agnosticos de driver) -- son de documentacion de comunidad y tienen confianza MEDIA. Revisalos igual.
+En todos los casos, los `uart_pin`/`cs_pin` de TMC2209/2208 **no** vienen de los archivos oficiales genericos (son agnosticos de driver) -- son de documentacion de comunidad y tienen confianza MEDIA, **excepto** Robin E3, RUMBA32, Monster8 y SGEN_L, donde el archivo oficial SI trae esos bloques TMC comentados con pines reales (confianza ALTA, ver `suggested_driver_uart_pins` en `config_templates/catalog/options.json`).
+
+### Drivers soportados
+
+TMC2209, TMC2208, TMC2225 (usa la misma seccion `[tmc2208]` de Klipper -- no existe `[tmc2225]`), TMC2130 (SPI por hardware o software), y A4988/DRV8825 (standalone: sin seccion de Klipper, la corriente se ajusta con el potenciometro fisico). El wizard oculta los campos que no aplican segun el driver elegido (ej. A4988 no muestra UART/StealthChop/sensorless).
 
 ## Requisitos opcionales
 

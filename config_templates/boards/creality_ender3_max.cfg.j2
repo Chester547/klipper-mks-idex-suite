@@ -1,10 +1,12 @@
 {% include "_safety_banner.j2" %}
 {% import "drivers/tmc_common.cfg.j2" as tmc %}
 # Confianza de pinout: ALTA (verificado contra
-# klipper/config/generic-creality-v4.2.7.cfg). MCU: STM32F103, bootloader
-# 28KiB. Conexion tipica por USART1 (PA10/PA9) via adaptador USB-serial, o
-# USB directo si tu variante lo trae. Todos los enable_pin comparten !PC3
-# (es una particularidad real de esta placa, no un error de copiado).
+# klipper/config/printer-creality-ender3max-2021.cfg -- board stock del
+# Creality Ender 3 MAX 2020/2021). MCU: STM32F103, bootloader 28KiB, USART1
+# PA10/PA9 (o USART3 PB11/PB10 via el IDC del LCD si preferis serie directo).
+# Ojo: el orden step/dir de esta placa coincide con el que uso para
+# "creality_4.2.2", NO con "creality_4.2.7" -- son revisiones distintas del
+# mismo linaje de placa, no las mezcles.
 
 [mcu]
 serial: {{ profile.board.mcu }}
@@ -12,32 +14,32 @@ baud: {{ profile.board.baud | default(250000) }}
 restart_method: command
 
 [stepper_x]
-step_pin: PB9
-dir_pin: PC2
+step_pin: PC2
+dir_pin: PB9
 enable_pin: !PC3
 microsteps: 16
 rotation_distance: 40
 endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_x', '^PA5') }}
 position_endstop: 0
-position_max: {{ profile.bed_size_x | default(235) }}
+position_max: {{ profile.bed_size_x | default(300) }}
 homing_speed: 50
 {{ tmc.block(profile, 'stepper_x') }}
 
 [stepper_y]
-step_pin: PB7
-dir_pin: PB8
+step_pin: PB8
+dir_pin: PB7
 enable_pin: !PC3
 microsteps: 16
 rotation_distance: 40
 endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_y', '^PA6') }}
 position_endstop: 0
-position_max: {{ profile.bed_size_y | default(235) }}
+position_max: {{ profile.bed_size_y | default(300) }}
 homing_speed: 50
 {{ tmc.block(profile, 'stepper_y') }}
 
 [stepper_z]
-step_pin: PB5
-dir_pin: !PB6
+step_pin: PB6
+dir_pin: !PB5
 enable_pin: !PC3
 microsteps: 16
 rotation_distance: 8
@@ -47,16 +49,16 @@ endstop_pin: probe:z_virtual_endstop
 endstop_pin: ^PA7
 position_endstop: 0.0
 {% endif %}
-position_max: 250
+position_max: 340
 position_min: -5
 {{ tmc.block(profile, 'stepper_z') }}
 
 [extruder]
-step_pin: PB3
-dir_pin: PB4
+step_pin: PB4
+dir_pin: PB3
 enable_pin: !PC3
 microsteps: 16
-rotation_distance: {{ profile.toolheads[0].rotation_distance | default(33.5) }}
+rotation_distance: {{ profile.toolheads[0].rotation_distance | default(31.901) }}
 nozzle_diameter: {{ profile.toolheads[0].nozzle_diameter | default(0.4) }}
 filament_diameter: 1.75
 heater_pin: PA1
@@ -67,7 +69,7 @@ pid_Kp: 21.527
 pid_Ki: 1.063
 pid_Kd: 108.982
 min_temp: {{ profile.toolheads[0].min_temp | default(0) }}
-max_temp: {{ profile.toolheads[0].max_temp | default(260) }}
+max_temp: {{ profile.toolheads[0].max_temp | default(250) }}
 max_extrude_only_distance: 100.0
 {{ tmc.block(profile, 'extruder') }}
 

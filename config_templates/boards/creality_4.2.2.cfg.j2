@@ -1,5 +1,5 @@
 {% include "_safety_banner.j2" %}
-{% import "drivers/tmc2209.cfg.j2" as tmc %}
+{% import "drivers/tmc_common.cfg.j2" as tmc %}
 # Confianza de pinout: ALTA (verificado contra
 # klipper/config/printer-creality-ender3pro-2020.cfg, identificado como
 # revision 4.2.2). OJO: comparada con la 4.2.7, el step_pin y dir_pin de
@@ -20,7 +20,7 @@ microsteps: 16
 rotation_distance: 40
 endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_x', '^PA5') }}
 position_endstop: 0
-position_max: 235
+position_max: {{ profile.bed_size_x | default(235) }}
 homing_speed: 50
 {{ tmc.block(profile, 'stepper_x') }}
 
@@ -32,7 +32,7 @@ microsteps: 16
 rotation_distance: 40
 endstop_pin: {{ tmc.endstop_pin(profile, 'stepper_y', '^PA6') }}
 position_endstop: 0
-position_max: 235
+position_max: {{ profile.bed_size_y | default(235) }}
 homing_speed: 50
 {{ tmc.block(profile, 'stepper_y') }}
 
@@ -57,7 +57,7 @@ step_pin: PB4
 dir_pin: PB3
 enable_pin: !PC3
 microsteps: 16
-rotation_distance: 33.500
+rotation_distance: {{ profile.toolheads[0].rotation_distance | default(33.5) }}
 nozzle_diameter: {{ profile.toolheads[0].nozzle_diameter | default(0.4) }}
 filament_diameter: 1.75
 heater_pin: PA1

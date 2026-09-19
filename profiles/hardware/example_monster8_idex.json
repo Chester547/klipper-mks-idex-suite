@@ -14,7 +14,7 @@
     "stepper_x": {
       "model": "tmc2209",
       "interface": "uart",
-      "uart_pin": "PD5",
+      "uart_pin": "PE6",
       "run_current": 0.8,
       "hold_current_ratio": 0.5,
       "sensorless_homing": true,
@@ -24,7 +24,7 @@
     "stepper_y": {
       "model": "tmc2209",
       "interface": "uart",
-      "uart_pin": "PD7",
+      "uart_pin": "PE3",
       "run_current": 0.8,
       "hold_current_ratio": 0.5,
       "sensorless_homing": true,
@@ -34,26 +34,26 @@
     "stepper_z": {
       "model": "tmc2209",
       "interface": "uart",
-      "uart_pin": "PD4",
+      "uart_pin": "PB7",
       "run_current": 0.6,
       "hold_current_ratio": 0.5
     },
     "extruder": {
       "model": "tmc2209",
       "interface": "uart",
-      "uart_pin": "PD9",
+      "uart_pin": "PB3",
       "run_current": 0.65,
       "hold_current_ratio": 0.5
     },
     "dual_carriage": {
       "model": "tmc2209",
       "interface": "uart",
-      "uart_pin": "PLACEHOLDER_VERIFY_UART_E1",
+      "uart_pin": "PD4",
       "run_current": 0.8,
       "hold_current_ratio": 0.5,
-      "step_pin": "PLACEHOLDER_VERIFY_STEP_E1",
-      "dir_pin": "PLACEHOLDER_VERIFY_DIR_E1",
-      "enable_pin": "PLACEHOLDER_VERIFY_ENABLE_E1",
+      "step_pin": "PD6",
+      "dir_pin": "!PD5",
+      "enable_pin": "!PD7",
       "endstop_pin": "PLACEHOLDER_VERIFY_ENDSTOP_E1",
       "position_endstop": 235,
       "position_max": 235,
@@ -62,12 +62,12 @@
     "extruder1": {
       "model": "tmc2209",
       "interface": "uart",
-      "uart_pin": "PLACEHOLDER_VERIFY_UART_E2",
+      "uart_pin": "PD0",
       "run_current": 0.65,
       "hold_current_ratio": 0.5,
-      "step_pin": "PLACEHOLDER_VERIFY_STEP_E2",
-      "dir_pin": "PLACEHOLDER_VERIFY_DIR_E2",
-      "enable_pin": "PLACEHOLDER_VERIFY_ENABLE_E2"
+      "step_pin": "PD2",
+      "dir_pin": "!PD1",
+      "enable_pin": "!PD3"
     }
   },
   "toolheads": [
@@ -88,8 +88,8 @@
       "thermistor_type": "ATC Semitec 104GT-2",
       "max_temp": 300,
       "min_temp": 0,
-      "heater_pin": "PLACEHOLDER_VERIFY_HEATER_E2",
-      "sensor_pin": "PLACEHOLDER_VERIFY_SENSOR_E2",
+      "heater_pin": "PA3",
+      "sensor_pin": "PC3",
       "gcode_offset": { "x": 0, "y": 0, "z": 0 }
     }
   ],
